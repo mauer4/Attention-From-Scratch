@@ -35,3 +35,13 @@ Quick start:
 The working directory is mounted at `/workspace`, so changes sync to your host. Use the container for consistent dependency management across GPUs and environments.
 
 > During `docker compose build` the NVIDIA CUTLASS sources are cloned into `third_party/cutlass`. The same happens when running `scripts/bootstrap_vast_ai.sh`; no manual install is required.
+
+## Olmo 2 Baseline on Vast.AI
+
+Use the dedicated scripts to prepare and exercise an isolated Olmo 2 environment:
+
+1. `bash scripts/setup_olmo2_env.sh` to create a `.venv-olmo2` virtualenv and install dependencies.
+2. `source .venv-olmo2/bin/activate`
+3. `python scripts/run_olmo2_inference.py --help` to explore generation options.
+
+Refer to `docs/OLMO2_BASELINE.md` for detailed instructions and upcoming profiling steps with Nsight tools.
