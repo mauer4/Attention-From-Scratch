@@ -33,7 +33,7 @@ What happens:
 - It optionally reports tokens/sec for a quick throughput estimate.
 - You can save output using `--output-path generated.txt`.
 - Use `--compile` to experiment with `torch.compile` on PyTorch 2.0+.
-- OLMo repositories ship custom tokenizer/model code. Pass `--trust-remote-code` (or set `export TRANSFORMERS_TRUST_REMOTE_CODE=1`) so `transformers` will execute their adapter; the setup script installs the required `hf-olmo` package automatically.
+- OLMo repositories ship custom tokenizer/model code. Pass `--trust-remote-code` (or set `export TRANSFORMERS_TRUST_REMOTE_CODE=1`) so `transformers` will execute their adapter. The setup script clones AllenAI's `hf_olmo` helper module from GitHub, satisfying the dynamic import.
 
 To explore other checkpoints (e.g. the 13B variant), change the `--model` flag to the desired Hugging Face repo.
 

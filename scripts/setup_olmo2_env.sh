@@ -25,11 +25,13 @@ pip install \
     sentencepiece \
     safetensors \
     bitsandbytes \
-    hf-olmo \
     huggingface_hub \
     numpy \
     rich \
     typer
+
+pip install \
+    "git+https://github.com/allenai/OLMo.git#subdirectory=hf_olmo"
 
 echo
 echo "Olmo 2 environment ready."
