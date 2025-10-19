@@ -48,6 +48,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Enable torch.compile for inference (PyTorch 2.0+).",
     )
+    parser.add_argument(
+        "--trust-remote-code",
+        action="store_true",
+        help="Allow execution of model-provided custom code (required for OLMo 2).",
+    )
     return parser.parse_args()
 
 
@@ -59,11 +64,16 @@ def main() -> None:
     torch_dtype = torch.float16 if device == "cuda" else torch.float32
 
     console.print(f"Loading model {args.model!r} on {device}...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.model,
+        use_fast=True,
+        trust_remote_code=args.trust_remote_code,
+    )
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
         torch_dtype=torch_dtype,
         device_map="auto" if device == "cuda" else None,
+        trust_remote_code=args.trust_remote_code,
     )
 
     if args.compile and hasattr(torch, "compile"):

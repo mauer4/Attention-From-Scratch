@@ -23,7 +23,8 @@ python scripts/run_olmo2_inference.py \
   --model allenai/OLMo-2-7B \
   --prompt "Summarize the Olmo 2 architecture." \
   --max-new-tokens 128 \
-  --temperature 0.7
+  --temperature 0.7 \
+  --trust-remote-code
 ```
 
 What happens:
@@ -32,6 +33,7 @@ What happens:
 - It optionally reports tokens/sec for a quick throughput estimate.
 - You can save output using `--output-path generated.txt`.
 - Use `--compile` to experiment with `torch.compile` on PyTorch 2.0+.
+- OLMo repositories ship custom tokenizer/model code. Pass `--trust-remote-code` (or set `export TRANSFORMERS_TRUST_REMOTE_CODE=1`) so `transformers` will execute their adapter; the setup script installs the required `hf-olmo` package automatically.
 
 To explore other checkpoints (e.g. the 13B variant), change the `--model` flag to the desired Hugging Face repo.
 

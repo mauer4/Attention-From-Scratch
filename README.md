@@ -42,6 +42,6 @@ Use the dedicated scripts to prepare and exercise an isolated Olmo 2 environment
 
 1. `bash scripts/setup_olmo2_env.sh` to create a `.venv-olmo2` virtualenv and install dependencies.
 2. `source .venv-olmo2/bin/activate`
-3. `python scripts/run_olmo2_inference.py --help` to explore generation options.
+3. `python scripts/run_olmo2_inference.py --trust-remote-code --help` to explore generation options (OLMo 2 repositories supply custom code that must be trusted).
 
 Refer to `docs/OLMO2_BASELINE.md` for detailed instructions and upcoming profiling steps with Nsight tools.

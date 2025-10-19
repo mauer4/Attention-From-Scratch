@@ -25,6 +25,7 @@ pip install \
     sentencepiece \
     safetensors \
     bitsandbytes \
+    hf-olmo \
     huggingface_hub \
     numpy \
     rich \
