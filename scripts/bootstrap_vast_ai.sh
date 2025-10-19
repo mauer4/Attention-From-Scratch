@@ -21,7 +21,15 @@ python3 -m pip install \
     sentencepiece \
     numpy \
     pybind11 \
-    cutlass \
     tqdm
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+THIRD_PARTY_DIR="${ROOT_DIR}/third_party"
+CUTLASS_DIR="${THIRD_PARTY_DIR}/cutlass"
+
+mkdir -p "${THIRD_PARTY_DIR}"
+if [ ! -d "${CUTLASS_DIR}" ]; then
+    git clone --depth 1 https://github.com/NVIDIA/cutlass.git "${CUTLASS_DIR}"
+fi
 
 echo "Bootstrap complete."

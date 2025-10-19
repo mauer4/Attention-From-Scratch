@@ -26,7 +26,6 @@ RUN python3 -m pip install --upgrade pip && \
         sentencepiece \
         numpy \
         pybind11 \
-        cutlass \
         tqdm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -37,7 +36,9 @@ WORKDIR /workspace
 
 COPY . /workspace
 
-RUN cmake -S . -B build -G Ninja && \
+RUN mkdir -p third_party && \
+    [ -d third_party/cutlass ] || git clone --depth 1 https://github.com/NVIDIA/cutlass.git third_party/cutlass && \
+    cmake -S . -B build -G Ninja && \
     cmake --build build
 
 CMD ["/bin/bash"]

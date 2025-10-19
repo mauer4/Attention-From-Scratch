@@ -33,3 +33,5 @@ Quick start:
 4. Build the project (already run during image build) or rerun as needed: `cmake --build build`
 
 The working directory is mounted at `/workspace`, so changes sync to your host. Use the container for consistent dependency management across GPUs and environments.
+
+> During `docker compose build` the NVIDIA CUTLASS sources are cloned into `third_party/cutlass`. The same happens when running `scripts/bootstrap_vast_ai.sh`; no manual install is required.
