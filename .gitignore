@@ -11,6 +11,8 @@ __pycache__/
 env/
 venv/
 .venv/
+.venv-*/
+*.nsys-rep
 logs/
 cache/
 third_party/

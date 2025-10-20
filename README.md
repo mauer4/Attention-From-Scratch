@@ -45,3 +45,12 @@ Use the dedicated scripts to prepare and exercise an isolated Olmo 2 environment
 3. `python scripts/run_olmo2_inference.py --trust-remote-code --help` to explore generation options (OLMo 2 repositories supply custom code that must be trusted). The setup script also pulls AllenAI's `hf_olmo` helper package directly from GitHub to satisfy Hugging Face's dynamic import.
 
 Refer to `docs/OLMO2_BASELINE.md` for detailed instructions and upcoming profiling steps with Nsight tools.
+
+### GPU Sanity Check & Profiling
+
+`python scripts/check_olmo_gpu.py` loads `allenai/OLMo-2-1124-13B`, generates a short sample, and prints CUDA diagnostics. Useful flags:
+
+- `--analysis` records model-load / generation latency, peak GPU memory, and throughput.
+- `--nsight` re-runs the script under Nsight Systems (requires `cuda-nsight-systems-12-8` from the NVIDIA apt repo). Use `--nsight-output=my_run` to rename the resulting `my_run.nsys-rep`.
+
+Both `scripts/setup_olmo2_env.sh` and `scripts/bootstrap_vast_ai.sh` ensure CUDA Toolkit 12.8, Nsight Systems, and a compatible PyTorch build are present. If you previously ran either script before these changes, rerun it to refresh the toolchain and gain Nsight profiling support.
