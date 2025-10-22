@@ -163,7 +163,7 @@ pick_torch_index() {
 
     local major="${cap%%.*}"
     if (( major >= 12 )); then
-        echo "https://download.pytorch.org/whl/nightly/cu124"
+        echo "https://download.pytorch.org/whl/nightly/cu128"
     else
         echo "https://download.pytorch.org/whl/cu121"
     fi
