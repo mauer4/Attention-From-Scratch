@@ -54,3 +54,19 @@ Refer to `docs/OLMO2_BASELINE.md` for detailed instructions and upcoming profili
 - `--nsight` re-runs the script under Nsight Systems (requires `cuda-nsight-systems-12-8` from the NVIDIA apt repo). Use `--nsight-output=my_run` to rename the resulting `my_run.nsys-rep`.
 
 Both `scripts/setup_olmo2_env.sh` and `scripts/bootstrap_vast_ai.sh` ensure CUDA Toolkit 12.8, Nsight Systems, and a compatible PyTorch build are present. If you previously ran either script before these changes, rerun it to refresh the toolchain and gain Nsight profiling support.
+
+### Inspecting Model Structure
+
+Once you have an Olmo 2 snapshot cached locally (for example the files the Hugging Face downloader places under `~/.cache/huggingface/hub/`), you can generate descriptive tables that summarize the architecture and the exact tensors present in the checkpoint:
+
+```bash
+# High-level architecture summary (console + CSV)
+python scripts/analyse_architecture.py /path/to/snapshot \
+    --layer-table-csv scripts/layer_summary.csv
+
+# Low-level state-dict tensor listing (console + CSV)
+python scripts/dump_state_dict_summary.py /path/to/snapshot \
+    --output scripts/state_dict_summary.csv
+```
+
+`analyse_architecture.py` reads `config.json` to report layer geometry, embeddings, norms, and RoPE settings; the optional CSV makes it easy to compare runs. `dump_state_dict_summary.py` walks the safetensor shards named in `model.safetensors.index.json` and records the true shapes/dtypes for every weight, which is useful for cross-checking against the architectural view.

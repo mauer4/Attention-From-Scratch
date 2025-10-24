@@ -1,0 +1,445 @@
+Scope,Tensor,Shape / Params,Details
+Embeddings,model.embed_tokens.weight,100352 x 5120,Token embedding matrix
+Rotary,rope,rotary_dim=128,"theta=500000, heads=40, head_dim=128"
+Layer 0,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 0,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 0,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 0,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 0,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 0,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 0,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 0,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 0,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 0,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 0,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 1,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 1,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 1,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 1,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 1,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 1,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 1,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 1,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 1,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 1,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 1,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 2,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 2,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 2,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 2,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 2,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 2,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 2,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 2,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 2,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 2,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 2,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 3,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 3,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 3,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 3,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 3,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 3,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 3,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 3,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 3,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 3,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 3,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 4,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 4,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 4,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 4,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 4,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 4,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 4,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 4,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 4,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 4,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 4,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 5,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 5,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 5,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 5,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 5,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 5,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 5,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 5,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 5,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 5,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 5,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 6,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 6,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 6,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 6,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 6,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 6,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 6,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 6,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 6,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 6,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 6,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 7,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 7,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 7,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 7,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 7,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 7,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 7,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 7,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 7,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 7,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 7,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 8,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 8,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 8,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 8,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 8,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 8,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 8,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 8,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 8,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 8,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 8,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 9,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 9,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 9,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 9,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 9,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 9,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 9,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 9,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 9,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 9,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 9,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 10,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 10,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 10,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 10,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 10,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 10,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 10,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 10,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 10,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 10,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 10,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 11,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 11,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 11,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 11,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 11,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 11,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 11,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 11,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 11,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 11,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 11,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 12,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 12,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 12,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 12,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 12,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 12,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 12,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 12,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 12,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 12,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 12,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 13,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 13,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 13,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 13,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 13,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 13,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 13,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 13,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 13,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 13,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 13,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 14,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 14,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 14,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 14,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 14,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 14,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 14,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 14,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 14,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 14,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 14,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 15,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 15,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 15,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 15,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 15,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 15,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 15,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 15,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 15,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 15,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 15,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 16,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 16,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 16,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 16,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 16,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 16,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 16,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 16,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 16,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 16,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 16,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 17,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 17,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 17,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 17,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 17,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 17,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 17,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 17,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 17,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 17,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 17,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 18,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 18,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 18,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 18,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 18,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 18,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 18,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 18,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 18,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 18,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 18,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 19,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 19,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 19,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 19,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 19,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 19,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 19,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 19,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 19,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 19,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 19,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 20,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 20,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 20,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 20,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 20,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 20,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 20,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 20,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 20,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 20,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 20,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 21,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 21,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 21,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 21,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 21,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 21,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 21,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 21,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 21,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 21,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 21,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 22,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 22,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 22,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 22,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 22,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 22,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 22,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 22,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 22,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 22,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 22,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 23,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 23,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 23,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 23,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 23,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 23,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 23,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 23,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 23,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 23,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 23,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 24,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 24,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 24,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 24,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 24,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 24,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 24,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 24,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 24,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 24,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 24,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 25,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 25,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 25,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 25,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 25,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 25,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 25,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 25,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 25,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 25,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 25,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 26,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 26,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 26,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 26,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 26,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 26,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 26,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 26,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 26,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 26,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 26,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 27,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 27,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 27,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 27,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 27,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 27,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 27,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 27,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 27,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 27,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 27,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 28,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 28,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 28,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 28,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 28,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 28,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 28,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 28,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 28,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 28,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 28,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 29,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 29,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 29,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 29,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 29,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 29,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 29,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 29,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 29,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 29,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 29,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 30,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 30,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 30,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 30,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 30,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 30,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 30,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 30,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 30,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 30,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 30,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 31,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 31,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 31,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 31,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 31,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 31,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 31,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 31,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 31,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 31,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 31,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 32,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 32,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 32,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 32,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 32,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 32,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 32,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 32,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 32,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 32,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 32,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 33,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 33,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 33,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 33,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 33,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 33,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 33,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 33,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 33,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 33,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 33,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 34,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 34,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 34,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 34,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 34,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 34,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 34,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 34,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 34,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 34,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 34,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 35,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 35,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 35,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 35,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 35,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 35,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 35,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 35,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 35,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 35,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 35,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 36,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 36,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 36,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 36,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 36,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 36,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 36,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 36,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 36,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 36,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 36,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 37,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 37,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 37,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 37,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 37,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 37,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 37,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 37,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 37,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 37,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 37,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 38,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 38,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 38,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 38,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 38,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 38,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 38,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 38,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 38,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 38,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 38,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Layer 39,self_attn.q_norm.weight,5120,Query RMSNorm scale
+Layer 39,self_attn.k_norm.weight,5120,Key RMSNorm scale
+Layer 39,self_attn.q_proj.weight,5120 x 5120,"Projects hidden -> heads (40x128), rotary_dim=128"
+Layer 39,self_attn.k_proj.weight,5120 x 5120,"KV projection, heads=40"
+Layer 39,self_attn.v_proj.weight,5120 x 5120,Value projection
+Layer 39,self_attn.o_proj.weight,5120 x 5120,Output projection (concats heads)
+Layer 39,post_attention_layernorm.weight,5120,RMSNorm after attention residual
+Layer 39,mlp.gate_proj.weight,13824 x 5120,FFN gate (silu)
+Layer 39,mlp.up_proj.weight,13824 x 5120,FFN up projection
+Layer 39,mlp.down_proj.weight,5120 x 13824,FFN down projection
+Layer 39,post_feedforward_layernorm.weight,5120,RMSNorm after FFN residual
+Output,model.norm.weight,5120,Final RMSNorm before logits
+Output,lm_head.weight,100352 x 5120,Logit projection
