@@ -45,4 +45,4 @@ PY
 echo
 printf 'Olmo 2 environment ready at %s\n' "${ENV_DIR}"
 echo "Activate it with: source ${ENV_DIR}/bin/activate"
-echo "Then run inference via: python llm_raw/olmo_2/test/run_olmo2_inference.py --help"
+echo "Then run inference via: python inference/Olmo_2/run_from_snapshot.py --help"\n\n\n

@@ -16,3 +16,10 @@ venv/
 logs/
 cache/
 third_party/
+llm_original/
+llm_raw/olmo_2/raw_weights/
+llm_raw/olmo_2/raw_tokenizer/
+llm_raw/olmo_2/metadata/.cache/
+llm_raw/olmo_2/hf_snapshot/
+inference/Olmo_2/logs/
+inference/From_Scratch/logs/

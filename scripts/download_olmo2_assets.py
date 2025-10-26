@@ -17,7 +17,6 @@ HF_SNAPSHOT = RAW_ROOT / "hf_snapshot"
 RAW_WEIGHTS = RAW_ROOT / "raw_weights"
 RAW_TOKENIZER = RAW_ROOT / "raw_tokenizer"
 METADATA = RAW_ROOT / "metadata"
-TEST_DIR = RAW_ROOT / "test"
 
 WEIGHT_SUFFIXES = {".safetensors"}
 TOKENIZER_FILES = {
@@ -33,15 +32,36 @@ METADATA_FILES = {
     "generation_config.json",
     "README.md",
     "model.safetensors.index.json",
-    "LICENSE",
 }
+
+
+def assets_present() -> bool:
+    required_weights = sorted(f"model-0000{i}-of-00006.safetensors" for i in range(1, 7))
+    if not RAW_WEIGHTS.exists():
+        return False
+    existing_weights = sorted(child.name for child in RAW_WEIGHTS.glob("model-*.safetensors"))
+    if existing_weights != required_weights:
+        return False
+
+    if not RAW_TOKENIZER.exists():
+        return False
+    missing_tokenizers = [name for name in TOKENIZER_FILES if not (RAW_TOKENIZER / name).exists()]
+    if missing_tokenizers:
+        return False
+
+    if not METADATA.exists():
+        return False
+    missing_metadata = [name for name in METADATA_FILES if not (METADATA / name).exists()]
+    if missing_metadata:
+        return False
+
+    return True
 
 
 def stage_files(snapshot_dir: Path) -> None:
     RAW_WEIGHTS.mkdir(parents=True, exist_ok=True)
     RAW_TOKENIZER.mkdir(parents=True, exist_ok=True)
     METADATA.mkdir(parents=True, exist_ok=True)
-    TEST_DIR.mkdir(parents=True, exist_ok=True)
 
     for path in snapshot_dir.rglob("*"):
         if path.is_dir():
@@ -82,21 +102,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Download OLMo-2 assets and verify layout.")
     parser.add_argument("--model-id", default="allenai/OLMo-2-1124-13B-Instruct", help="Hugging Face model ID")
     parser.add_argument("--revision", default=None, help="Optional model revision/commit hash")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force download even if assets already exist under llm_raw/olmo_2/",
+    )
     args = parser.parse_args()
 
-    HF_SNAPSHOT.mkdir(parents=True, exist_ok=True)
-
-    print(f"[download] Fetching {args.model_id} …")
-    snapshot_download(
-        repo_id=args.model_id,
-        revision=args.revision,
-        local_dir=HF_SNAPSHOT,
-        local_dir_use_symlinks=False,
-        resume_download=True,
-    )
-
-    stage_files(HF_SNAPSHOT)
-    print("[stage] Weights and metadata staged under llm_raw/olmo_2")
+    if assets_present() and not args.force:
+        print("[cache] Existing weights/metadata detected under llm_raw/olmo_2; skipping download.")
+    else:
+        HF_SNAPSHOT.mkdir(parents=True, exist_ok=True)
+        print(f"[download] Fetching {args.model_id} ...")
+        snapshot_download(
+            repo_id=args.model_id,
+            revision=args.revision,
+            local_dir=HF_SNAPSHOT,
+            local_dir_use_symlinks=False,
+            resume_download=True,
+        )
+        stage_files(HF_SNAPSHOT)
+        print("[stage] Weights and metadata staged under llm_raw/olmo_2")
 
     env = dict(os.environ)
     env.setdefault("PYTHONPATH", str(ROOT))

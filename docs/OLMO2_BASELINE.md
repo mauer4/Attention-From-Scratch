@@ -12,6 +12,7 @@ cd Attention-From-Scratch
 bash scripts/setup_olmo2_env.sh [.venv-olmo2]
 
 source .venv-olmo2/bin/activate
+python scripts/download_olmo2_assets.py
 ```
 
 The setup script installs the CUDA-enabled PyTorch wheels plus the Hugging Face stack (`transformers`, `accelerate`, `sentencepiece`, `bitsandbytes`, etc.). No changes are made to the system Python.
@@ -19,7 +20,7 @@ The setup script installs the CUDA-enabled PyTorch wheels plus the Hugging Face 
 ## 2. Run a Baseline Generation
 
 ```bash
-python scripts/run_olmo2_inference.py \
+python inference/Olmo_2/run_from_snapshot.py \
   --model allenai/OLMo-2-7B \
   --prompt "Summarize the Olmo 2 architecture." \
   --max-new-tokens 128 \
@@ -44,7 +45,8 @@ The goal is to transition from “baseline hf-inference” into detailed kernel 
 - Record consistent prompts and batch sizes to compare throughput vs. the forthcoming custom engine.
 - Capture GPU utilization (`nvidia-smi dmon`) and memory footprints during runs.
 - Install Nsight Systems / Nsight Compute inside the Vast container or stream the session back to a local GUI. NVIDIA’s container images already include the CLI tools (`nsys`, `ncu`).
-- Re-run the baseline script under Nsight to collect timeline traces and kernel metrics (e.g., `nsys profile python scripts/run_olmo2_inference.py ...`).
+- Re-run the baseline script under Nsight to collect timeline traces and kernel metrics (e.g., `nsys profile python inference/Olmo_2/run_from_snapshot.py ...`).
 - Store reports under `benchmarks/` (keep traces outside Git or add to `.gitignore`).
 
 These measurements will anchor the performance targets for the from-scratch implementation described in `docs/PROJECT_PLAN.md`.
+\n\n\n

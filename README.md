@@ -40,20 +40,22 @@ The working directory is mounted at `/workspace`, so changes sync to your host. 
 
 Use the dedicated scripts to prepare and exercise an isolated Olmo 2 environment:
 
+Run `python scripts/download_olmo2_assets.py` first to fetch weights/metadata into `llm_raw/olmo_2/` and validate the layout.
+
 1. `bash scripts/setup_olmo2_env.sh` to create a `.venv-olmo2` virtualenv and install dependencies.
 2. `source .venv-olmo2/bin/activate`
-3. `python scripts/run_olmo2_inference.py --trust-remote-code --help` to explore generation options (OLMo 2 repositories supply custom code that must be trusted). The setup script also pulls AllenAI's `hf_olmo` helper package directly from GitHub to satisfy Hugging Face's dynamic import.
+3. `python inference/Olmo_2/run_from_snapshot.py --trust-remote-code --help` to explore generation options (OLMo 2 repositories supply custom code that must be trusted). The setup script also pulls AllenAI's `hf_olmo` helper package directly from GitHub to satisfy Hugging Face's dynamic import.
 
 Refer to `docs/OLMO2_BASELINE.md` for detailed instructions and upcoming profiling steps with Nsight tools.
 
 ### GPU Sanity Check & Profiling
 
-`python scripts/check_olmo_gpu.py` loads `allenai/OLMo-2-1124-13B`, generates a short sample, and prints CUDA diagnostics. Useful flags:
+`python inference/Olmo_2/check_gpu.py` loads `allenai/OLMo-2-1124-13B`, generates a short sample, and prints CUDA diagnostics. Useful flags:
 
 - `--analysis` records model-load / generation latency, peak GPU memory, and throughput.
-- `--nsight` re-runs the script under Nsight Systems (requires `cuda-nsight-systems-12-8` from the NVIDIA apt repo). Use `--nsight-output=my_run` to rename the resulting `my_run.nsys-rep`.
+- `--nsight` re-runs the script under Nsight Systems (requires the NVIDIA Nsight Systems package (installable via the CUDA apt repository)). Use `--nsight-output=my_run` to rename the resulting `my_run.nsys-rep`.
 
-Both `scripts/setup_olmo2_env.sh` and `scripts/bootstrap_vast_ai.sh` ensure CUDA Toolkit 12.8, Nsight Systems, and a compatible PyTorch build are present. If you previously ran either script before these changes, rerun it to refresh the toolchain and gain Nsight profiling support.
+Both `scripts/setup_olmo2_env.sh` and `setup/bare_metal_setup.sh` install the CUDA/cuDNN-compatible PyTorch wheels (cu121) plus optional Nsight tooling when available. Rerun the environment script after significant changes to refresh dependencies.
 
 ### Inspecting Model Structure
 
@@ -69,4 +71,14 @@ python scripts/dump_state_dict_summary.py /path/to/snapshot \
     --output scripts/state_dict_summary.csv
 ```
 
+### Inference Workflows
+
+- **Flow 1 – OLMo 2 repo**  
+  1. `bash scripts/fetch_olmo2_repo.sh` (optional) to clone AllenAI's repository into `llm_original/olmo_2_repo/`.  
+  2. `python inference/Olmo_2/run_from_snapshot.py --help` once the snapshot has been downloaded. Logs and generated text can live under `inference/Olmo_2/`.
+
+- **Flow 2 – Custom engine (from scratch)**  
+  Use `inference/From_Scratch/` as the staging area for bespoke pipelines. The placeholder script currently prints guidance and can be replaced with the production inference harness once available.
+
 `analyse_architecture.py` reads `config.json` to report layer geometry, embeddings, norms, and RoPE settings; the optional CSV makes it easy to compare runs. `dump_state_dict_summary.py` walks the safetensor shards named in `model.safetensors.index.json` and records the true shapes/dtypes for every weight, which is useful for cross-checking against the architectural view.
+\n\n\n\n\n\n\n\n\n\n\n

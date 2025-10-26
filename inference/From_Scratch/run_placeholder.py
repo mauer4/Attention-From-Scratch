@@ -6,4 +6,4 @@ import sys
 print("From-Scratch inference is not implemented yet.")
 print("Add your custom pipeline under inference/From_Scratch/ and update this script.")
 
-sys.exit(0)
+sys.exit(0)\n\n

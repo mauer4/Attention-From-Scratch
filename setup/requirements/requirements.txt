@@ -1,0 +1,15 @@
+# Core dependencies for analysis scripts
+--extra-index-url https://download.pytorch.org/whl/cu128
+huggingface_hub>=0.24.0
+safetensors>=0.6.0
+torch>=2.1.0
+torchvision
+torchaudio
+numpy
+pybind11
+sentencepiece
+tqdm
+accelerate
+bitsandbytes
+rich
+typer

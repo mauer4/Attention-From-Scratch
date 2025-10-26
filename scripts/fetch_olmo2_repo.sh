@@ -26,4 +26,4 @@ rm -f "${TMP_REQ}"
 echo
 echo "OLMo repository cloned to: ${REPO_DIR}"
 echo "Virtual environment available at: ${ENV_DIR}"
-echo "To activate: source ${ENV_DIR}/bin/activate"
+echo "To activate: source ${ENV_DIR}/bin/activate"\necho "Run inference via: python inference/Olmo_2/run_from_snapshot.py --help"\n\n
