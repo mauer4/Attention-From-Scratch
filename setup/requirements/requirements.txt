@@ -13,3 +13,4 @@ accelerate
 bitsandbytes
 rich
 typer
+transformers>=4.35.0
