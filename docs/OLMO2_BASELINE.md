@@ -21,22 +21,19 @@ The setup script installs the CUDA-enabled PyTorch wheels plus the Hugging Face 
 
 ```bash
 python inference/Olmo_2/run_from_snapshot.py \
-  --model allenai/OLMo-2-7B \
   --prompt "Summarize the Olmo 2 architecture." \
   --max-new-tokens 128 \
-  --temperature 0.7 \
-  --trust-remote-code
+  --temperature 0.7
 ```
 
 What happens:
 
-- The script loads the tokenizer and model with half precision on GPU (if available).
+- The script loads the tokenizer from `llm_raw/olmo_2/raw_tokenizer/` and stitches the weights plus metadata into a temporary Hugging Face view for AllenAI's reference utilities.
+- It keeps the checkpoint offline—no Hugging Face Hub access is required once the assets are staged.
 - It optionally reports tokens/sec for a quick throughput estimate.
 - You can save output using `--output-path generated.txt`.
 - Use `--compile` to experiment with `torch.compile` on PyTorch 2.0+.
-- OLMo repositories ship custom tokenizer/model code. Pass `--trust-remote-code` (or set `export TRANSFORMERS_TRUST_REMOTE_CODE=1`) so `transformers` will execute their adapter. The setup script clones AllenAI's `hf_olmo` helper module from GitHub, satisfying the dynamic import.
-
-To explore other checkpoints (e.g. the 13B variant), change the `--model` flag to the desired Hugging Face repo.
+- Pass `--snapshot-path` or `--tokenizer-path` to target alternative staged weights (e.g., 7B vs. 13B variants).
 
 ## 3. Next Steps Toward Profiling
 

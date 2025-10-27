@@ -63,22 +63,24 @@ def stage_files(snapshot_dir: Path) -> None:
     RAW_TOKENIZER.mkdir(parents=True, exist_ok=True)
     METADATA.mkdir(parents=True, exist_ok=True)
 
+    def move_file(src: Path, dest: Path) -> None:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists():
+            dest.unlink()
+        shutil.move(str(src), str(dest))
+
     for path in snapshot_dir.rglob("*"):
         if path.is_dir():
             continue
         rel = path.relative_to(snapshot_dir)
         if rel.name in TOKENIZER_FILES:
-            dest = RAW_TOKENIZER / rel.name
+            move_file(path, RAW_TOKENIZER / rel.name)
         elif rel.suffix in WEIGHT_SUFFIXES:
-            dest = RAW_WEIGHTS / rel.name
+            move_file(path, RAW_WEIGHTS / rel.name)
         elif rel.name in METADATA_FILES:
-            dest = METADATA / rel.name
-        else:
-            continue
-        if dest.exists():
-            continue
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(path, dest)
+            move_file(path, METADATA / rel.name)
+
+    shutil.rmtree(snapshot_dir, ignore_errors=True)
 
 
 def run(cmd: list[str], env: dict[str, str]) -> None:
