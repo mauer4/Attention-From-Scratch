@@ -18,34 +18,28 @@ I'm mapping the landscape of large language model inference so an individual dev
 - `scripts/` - automation for Vast.AI provisioning, environment setup, asset download, and architecture/state-dict analysis.
 - `docs/` - project planning (`PROJECT_PLAN.md`) and the step-by-step Vast.AI baseline guide (`OLMO2_BASELINE.md`).
 
-## Setup Overview
+## Common Setup Flow
 
-1. **Provision system dependencies**
-   - `bash setup/bare_metal_setup.sh [.venv]` installs CUDA 12.8 toolkits, Nsight Systems, build essentials, and creates a Python virtual environment on a developer workstation.
-   - `bash scripts/bootstrap_vast_ai.sh` executes the equivalent flow inside a Vast.AI instance, including CUTLASS cloning under `third_party/`.
-2. **Optional container workflow** - Docker users can run `docker compose build` followed by `docker compose run --rm dev` for a reproducible CUDA-enabled environment (sources mounted at `/workspace`).
-3. **Create the Olmo 2 Python environment**  
-   `bash scripts/setup_olmo2_env.sh [.venv-olmo2]` wraps the bare-metal setup, verifies CUDA support in the selected PyTorch wheel, and leaves an activation-ready `.venv-olmo2/`.
-4. **Activate the environment whenever you work with the baseline tools**  
-   `source .venv-olmo2/bin/activate`
+Both inference paths share the same bootstrap pipeline (mirrors the setup-flow diagram in the planning notes).
 
-## Retrieve Olmo 2 Assets
-
-Staging the model weights and metadata is automated:
-
-```bash
-source .venv-olmo2/bin/activate
-python scripts/download_olmo2_assets.py
-```
-
-The script downloads `allenai/OLMo-2-1124-13B-Instruct` (override with `--model-id` when needed), mirrors the Hugging Face snapshot under `llm_raw/olmo_2/`, and runs the validation suite:
-
-- `llm_setup/analysis/test_analysis.py` confirms required files exist.
-- `get_tensor_shapes_form_safetensors.py` regenerates `tensor_inventory.csv`.
-- `verify_tensor_extraction.py` spot-checks manual tensor reads.
-- `inference/Olmo_2/check_gpu.py` runs when CUDA is available to ensure the checkpoint loads and generates successfully.
-
-Weights are duplicated into `llm_raw/olmo_2/raw_weights/`, tokenizer assets land in `llm_raw/olmo_2/raw_tokenizer/`, and metadata (including the upstream README) is copied to `llm_raw/olmo_2/metadata/`.
+1. **Provision the compute environment**
+   - Bare metal: `bash setup/bare_metal_setup.sh [.venv]` installs CUDA 12.8 toolkits, Nsight Systems, build tools, and creates a Python virtual environment.
+   - Vast.AI: `bash scripts/bootstrap_vast_ai.sh` prepares the rented instance (APT dependencies, CUDA repos, PyTorch wheel, CUTLASS checkout).
+   - Docker: `docker compose build` then `docker compose run --rm dev` spawns a GPU-enabled container with the repository mounted at `/workspace`.
+2. **Create and activate the shared Python environment**  
+   Run `bash scripts/setup_olmo2_env.sh [.venv-olmo2]` (inside the container or on the host). The script wraps the bare-metal provisioning logic, ensures the selected PyTorch build matches your GPU, and leaves an activation-ready `.venv-olmo2/`. Activate it when working with either flow: `source .venv-olmo2/bin/activate`.
+3. **Ensure weights are staged under `llm_raw/`**  
+   With the environment active, execute:
+   ```bash
+   python scripts/download_olmo2_assets.py
+   ```
+   The helper only downloads `allenai/OLMo-2-1124-13B-Instruct` when the required files are missing (or when `--force` is passed). It mirrors the Hugging Face snapshot into `llm_raw/olmo_2/hf_snapshot/` and copies the usable assets into `llm_raw/olmo_2/raw_weights/`, `raw_tokenizer/`, and `metadata/`.
+4. **Validate resources and wiring**  
+   The download script automatically runs:
+   - `llm_setup/analysis/test_analysis.py` to confirm expected files exist.
+   - `get_tensor_shapes_form_safetensors.py` and `verify_tensor_extraction.py` to regenerate tensor inventories and check shard offsets.
+   - `inference/Olmo_2/check_gpu.py` (when CUDA is available) to load the model and perform a short generation.
+   Re-run these checks after modifying paths or swapping checkpoints to ensure both the AllenAI and custom engines see the same staged assets.
 
 ## Inference Flows
 
