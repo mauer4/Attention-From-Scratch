@@ -4,7 +4,7 @@
 
 ## Project Vision
 
-I'm mapping the landscape of large language model inference so an individual developer can run production-grade open weights. The goal is not to pretrain a new network, but to understand and rebuild the inference stack, from environment provisioning and weight inspection through custom CUDA kernels that rival modern serving engines. Olmo 2 provides the reference model family while the repository evolves toward an in-house attention engine.
+I'm mapping the landscape of large language model inference so an individual developer can run production-grade open weights. The goal is not to pretrain a new network, but to understand and rebuild the inference stack, from environment provisioning and weight inspection through custom CUDA kernels that rival modern serving engines. The work splits into two flows: first, validating AllenAI's released inference engine end to end; second, building a bespoke attention-from-scratch engine that eventually replaces the upstream stack for targeted workloads.
 
 ## Repository Layout
 
@@ -47,38 +47,41 @@ The script downloads `allenai/OLMo-2-1124-13B-Instruct` (override with `--model-
 
 Weights are duplicated into `llm_raw/olmo_2/raw_weights/`, tokenizer assets land in `llm_raw/olmo_2/raw_tokenizer/`, and metadata (including the upstream README) is copied to `llm_raw/olmo_2/metadata/`.
 
-## Baseline Inference Flows
+## Inference Flows
 
-### Flow A: Hugging Face runner (this repository)
+### 1. AllenAI OLMo inference engine
 
-1. Activate `.venv-olmo2`.
-2. Optionally sanity-check the GPU:  
-   `python inference/Olmo_2/check_gpu.py --prompt "GPU health check" --analysis`
-3. Generate text from the staged snapshot:
+This flow leans on AllenAI's official repository so the baseline behaviour matches the published release.
 
-   ```bash
-   python inference/Olmo_2/run_from_snapshot.py \
-     --model allenai/OLMo-2-1124-13B-Instruct \
-     --prompt "Summarize the Olmo 2 architecture." \
-     --max-new-tokens 128 \
-     --trust-remote-code
-   ```
+1. Activate the Olmo environment: `source .venv-olmo2/bin/activate`.
+2. Clone or refresh the repo with `bash scripts/fetch_olmo2_repo.sh [.venv-olmo2]`. The script:
+   - Downloads the `allenai/OLMo` repository into `llm_original/olmo_2_repo/`.
+   - Reuses `.venv-olmo2` (creating it if necessary) and installs the repo in editable mode alongside its `inference/requirements.txt`.
+3. Populate weights via `python scripts/download_olmo2_assets.py` so the snapshot is staged under `llm_raw/olmo_2/`.
+4. Follow `llm_original/olmo_2_repo/README.md` (and the repo's `inference/` folder) to launch AllenAI's CLI or scripts. Point them at the staged snapshot when running locally or use the default Hugging Face download path in cloud environments.
 
-`check_gpu_profiler.py` wraps the same workload with Nsight tracing so you can capture kernels for later analysis. Output artefacts can live beside the scripts under `inference/Olmo_2/`.
+Supporting utilities in this repository include:
 
-### Flow B: AllenAI reference repository
+- `inference/Olmo_2/run_from_snapshot.py`, `check_gpu.py`, and `check_gpu_profiler.py` for quick health checks against the staged weights.
+- `scripts/analyse_architecture.py` and `scripts/dump_state_dict_summary.py` to catalog the downloaded tensors.
 
-Run `bash scripts/fetch_olmo2_repo.sh [.venv-olmo2]` to clone `allenai/OLMo` into `llm_original/olmo_2_repo/`, refresh the virtual environment, and install the repo in editable mode along with its `inference/requirements.txt`. Activate the environment (`source .venv-olmo2/bin/activate`) and follow `llm_original/olmo_2_repo/README.md` for the official CLI and configuration examples. Use this flow to cross-check behaviour against upstream commits.
+Treat these helpers as diagnostics around the AllenAI engine rather than a replacement for it.
+
+### 2. Custom attention-from-scratch engine (WIP)
+
+The second flow is the bespoke CUDA/C++ inference stack under development.
+
+- Source layout: core kernels and runtime live under `src/` and `include/`, with `python_bindings/` exposing a Python surface for tests and integration once the engine stabilises.
+- Build tooling: `CMakeLists.txt`, `Dockerfile`, `docker-compose.yml`, and the scripts in `setup/` provide repeatable build environments on bare metal, Docker, and Vast.AI.
+- Execution entry point: `inference/From_Scratch/` currently holds placeholder scripts; they will be replaced with the production driver when the engine reaches parity.
+- Roadmap: `docs/PROJECT_PLAN.md` sequences the milestones from tokenizer validation through FlashAttention-style kernels, paged KV caches, quantisation, and serving.
+- Benchmark targets: store Nsight traces and throughput data in `benchmarks/` to compare against the AllenAI baseline as new features land.
+
+For now, use the plan to guide implementation tasks and rely on the AllenAI flow for functional inference. As kernels come online, keep the staged Olmo 2 weights in `llm_raw/` to validate numerical parity and performance.
 
 ## Custom Engine Roadmap
 
-The bespoke attention implementation is under active development:
-
-- `src/`, `include/`, and `python_bindings/` will host the CUDA kernels, runtime graph, and pybind11 surface once Week 2 of the roadmap is complete.
-- `inference/From_Scratch/` is reserved for the future driver script that exercises the custom engine.
-- `docs/PROJECT_PLAN.md` lays out the 12-week schedule covering tokenizer support, FlashAttention-style kernels, paged KV caches, quantisation, scheduler features, and serving APIs.
-
-Until the custom pipeline is checked in, use the baseline flows to gather performance targets and reference outputs.
+`docs/PROJECT_PLAN.md` captures the 12-week schedule that brings the custom engine online (tokenizer parity, FlashAttention-style kernels, paged KV caches, quantisation, batching, serving). Use it to plan implementation work while comparing against the AllenAI baseline for functional and performance validation.
 
 ## Analysis and Benchmarking Toolkit
 
