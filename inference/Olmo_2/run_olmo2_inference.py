@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import tempfile
@@ -15,12 +16,36 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - surfaced at runtime
     torch = None  # type: ignore[assignment]
 from rich.console import Console
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SNAPSHOT = ROOT / "llm_raw" / "olmo_2" / "raw_weights"
 DEFAULT_TOKENIZER = ROOT / "llm_raw" / "olmo_2" / "raw_tokenizer"
 DEFAULT_METADATA = ROOT / "llm_raw" / "olmo_2" / "metadata"
 DEFAULT_ENGINE_ROOT = ROOT / "llm_original" / "olmo_2_repo"
+
+
+def _infer_snapshot_dtype(metadata_dir: Path) -> torch.dtype | None:
+    """Return the torch dtype recorded in the snapshot config, if any."""
+    if torch is None:
+        return None
+
+    config_path = metadata_dir / "config.json"
+    if not config_path.exists():
+        return None
+
+    try:
+        config = json.loads(config_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    dtype_str = config.get("torch_dtype")
+    if not isinstance(dtype_str, str):
+        return None
+
+    torch_attr = dtype_str.strip().lower().replace(" ", "")
+    dtype = getattr(torch, torch_attr, None)
+    return dtype if isinstance(dtype, torch.dtype) else None
 
 
 def _import_eval_utils(engine_root: Path):
@@ -47,16 +72,69 @@ def _import_eval_utils(engine_root: Path):
         import eval.utils as eval_utils  # type: ignore
     except ModuleNotFoundError as exc:  # pragma: no cover - handled at runtime
         missing = exc.name
-        if missing == "torch":
+        if missing == "openai":
+            import importlib.machinery
+            import types
+            import warnings
+
+            warnings.warn(
+                "The optional 'openai' package is not installed. "
+                "Skipping OpenAI API helpers; local OLMo inference remains available.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+
+            def _missing_openai(*_args, **_kwargs):
+                raise ModuleNotFoundError(
+                    "The 'openai' package is required for OpenAI API integrations. "
+                    "Install it with `pip install openai` if you need those features."
+                )
+
+            stub = types.ModuleType("openai")
+            stub.__spec__ = importlib.machinery.ModuleSpec("openai", loader=None)  # type: ignore[attr-defined]
+            stub.__path__ = []  # type: ignore[attr-defined]
+            stub.__package__ = "openai"
+            stub.__file__ = "<openai-shim>"  # type: ignore[attr-defined]
+            stub.api_key = None  # type: ignore[attr-defined]
+            stub.error = types.SimpleNamespace(OpenAIError=ModuleNotFoundError)  # type: ignore[attr-defined]
+            stub.ChatCompletion = types.SimpleNamespace(acreate=_missing_openai, create=_missing_openai)
+            stub.Completion = types.SimpleNamespace(acreate=_missing_openai, create=_missing_openai)
+
+            def _stub_getattr(_name):
+                if _name.startswith("__"):
+                    raise AttributeError(f"module 'openai' has no attribute {_name!r}")
+                return _missing_openai
+
+            stub.__getattr__ = _stub_getattr  # type: ignore[attr-defined]
+            sys.modules.setdefault("openai", stub)
+
+            try:
+                import eval.utils as eval_utils  # type: ignore
+            except ModuleNotFoundError as secondary:  # pragma: no cover - handled at runtime
+                secondary_missing = secondary.name
+                if secondary_missing == "openai":
+                    raise SystemExit(
+                        "Failed to initialize OpenAI API shims. Install the 'openai' package to continue."
+                    ) from secondary
+                if secondary_missing == "torch":
+                    raise SystemExit(
+                        "PyTorch is missing. Activate the `.venv-olmo2` environment created by scripts/setup_olmo2_env.sh."
+                    ) from secondary
+                raise SystemExit(
+                    f"Dependency {secondary_missing!r} is unavailable. "
+                    "Re-run scripts/fetch_olmo2_repo.sh to finish installing upstream requirements."
+                ) from secondary
+        elif missing == "torch":
             hint = "PyTorch is missing. Activate the `.venv-olmo2` environment created by scripts/setup_olmo2_env.sh."
+            raise SystemExit(hint) from exc
         else:
             hint = (
                 f"Dependency {missing!r} is unavailable. "
                 "Re-run scripts/fetch_olmo2_repo.sh to finish installing upstream requirements."
             )
-        raise SystemExit(hint) from exc
+            raise SystemExit(hint) from exc
 
-    required_attrs = ("load_hf_lm_and_tokenizer", "generate_completions")
+    required_attrs = ("generate_completions",)
     if not all(hasattr(eval_utils, attr) for attr in required_attrs):
         raise SystemExit(
             "AllenAI inference utilities are missing expected helpers. "
@@ -218,7 +296,19 @@ def main() -> None:
         snapshot_view_obj, snapshot_source = _prepare_snapshot_view(snapshot_path, metadata_path)
         console.print(f"Created temporary snapshot view at {snapshot_source} for HF-compatible loading.")
 
-    device_label, device_map, can_half = _resolve_device(args.device)
+    device_label, _, can_half = _resolve_device(args.device)
+
+    snapshot_dtype = _infer_snapshot_dtype(metadata_path)
+    if args.full_precision:
+        target_dtype = torch.float32 if torch is not None else None
+    else:
+        target_dtype = snapshot_dtype
+        if target_dtype is None and can_half and torch is not None:
+            target_dtype = torch.float16
+
+    if target_dtype is not None:
+        console.print(f"Target dtype: {target_dtype}")
+
     if args.device == "cuda" and device_label != "cuda":
         console.print(
             "[yellow]Requested CUDA but none detected. Falling back to CPU (this will be slow).[/yellow]"
@@ -226,19 +316,65 @@ def main() -> None:
 
     console.print(
         f"Loading OLMo 2 snapshot from {snapshot_source} "
-        f"using AllenAI utilities (device={device_label}, half={can_half and not args.full_precision})..."
+        f"using Hugging Face transformers (dtype={target_dtype or 'fp32'})..."
     )
+
     load_start = time.perf_counter()
-    model, tokenizer = eval_utils.load_hf_lm_and_tokenizer(
-        str(snapshot_source),
-        tokenizer_name_or_path=str(tokenizer_path),
-        device_map=device_map,
-        load_in_half=can_half and not args.full_precision,
-        use_fast_tokenizer=True,
-        padding_side="left",
-    )
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(
+            str(tokenizer_path),
+            use_fast=True,
+            local_files_only=True,
+        )
+    except OSError as exc:
+        raise SystemExit(
+            f"Failed to load tokenizer assets from {tokenizer_path}: {exc}. "
+            "Re-run scripts/download_olmo2_assets.py to ensure tokenizer files are staged."
+        ) from exc
+
+    tokenizer.padding_side = "left"
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+
+    model_load_kwargs = {"device_map": None, "local_files_only": True}
+    try:
+        if target_dtype is not None:
+            try:
+                model = AutoModelForCausalLM.from_pretrained(
+                    str(snapshot_source),
+                    dtype=target_dtype,
+                    **model_load_kwargs,
+                )
+            except TypeError:
+                model = AutoModelForCausalLM.from_pretrained(
+                    str(snapshot_source),
+                    torch_dtype=target_dtype,
+                    **model_load_kwargs,
+                )
+        else:
+            model = AutoModelForCausalLM.from_pretrained(
+                str(snapshot_source),
+                **model_load_kwargs,
+            )
+    except OSError as exc:
+        raise SystemExit(
+            f"Failed to load model weights from {snapshot_source}: {exc}. "
+            "Run scripts/download_olmo2_assets.py to ensure snapshot shards are present."
+        ) from exc
+
     load_duration = time.perf_counter() - load_start
     console.print(f"Model and tokenizer ready in {load_duration:.2f}s.")
+
+    if device_label == "cuda":
+        if torch is None or not torch.cuda.is_available():
+            raise SystemExit("CUDA was requested but torch.cuda.is_available() is False.")
+        torch.cuda.empty_cache()
+        model = model.to(device="cuda")
+    else:
+        model = model.to(device=device_label)
+
+    model.eval()
 
     if args.compile and device_label == "cuda" and hasattr(torch, "compile"):
         console.print("Compiling model for optimized inference...")
