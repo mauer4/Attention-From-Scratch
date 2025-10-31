@@ -61,7 +61,7 @@ USAGE
 }
 
 log() {
-  echo "[bootstrap] $*"
+  echo "[bootstrap] $*" >&2
 }
 
 warn() {
@@ -402,6 +402,7 @@ select_torch_index() {
   fi
 
   case "${chosen_cuda}" in
+    12.8|12.7|12.6|12.5) echo "https://download.pytorch.org/whl/cu128" ;;
     12.*) echo "https://download.pytorch.org/whl/cu121" ;;
     11.8) echo "https://download.pytorch.org/whl/cu118" ;;
     ""|none) echo "" ;;
@@ -411,6 +412,7 @@ select_torch_index() {
 
 install_python_dependencies() {
   local env_path="$1"
+  local torch_index="$2"
   local venv_python="${env_path}/bin/python"
   local venv_pip="${env_path}/bin/pip"
 
@@ -418,11 +420,9 @@ install_python_dependencies() {
     die "Python venv missing at ${env_path}; expected ${venv_python}."
   fi
 
-  "${venv_python}" -m pip install --upgrade pip setuptools wheel
+  "${venv_python}" -m pip install --upgrade "pip<25" setuptools wheel
 
   local -a pip_args=("--requirement" "${LOCK_FILE}")
-  local torch_index
-  torch_index="$(select_torch_index)"
   if [[ -n "${torch_index}" ]]; then
     pip_args=("--extra-index-url" "${torch_index}" "${pip_args[@]}")
     log "Using PyTorch wheel index: ${torch_index}"
@@ -431,6 +431,48 @@ install_python_dependencies() {
   fi
 
   "${venv_pip}" install "${pip_args[@]}"
+}
+
+ensure_cuda_wheels() {
+  local env_path="$1"
+  local torch_index="$2"
+
+  if [[ -z "${torch_index}" ]]; then
+    return
+  fi
+
+  TORCH_INDEX_URL_REINSTALL="${torch_index}" "${env_path}/bin/python" <<'PY'
+import os
+import subprocess
+import sys
+
+try:
+    import importlib.metadata as md
+except ImportError:  # pragma: no cover - Python <3.8
+    import importlib_metadata as md  # type: ignore
+
+index = os.environ.get("TORCH_INDEX_URL_REINSTALL")
+if not index:
+    sys.exit(0)
+
+packages = ("torch", "torchvision", "torchaudio")
+reinstall = []
+for name in packages:
+    try:
+        version = md.version(name)
+    except Exception:
+        continue
+    if "+cpu" in version:
+        base = version.split("+", 1)[0]
+        reinstall.append((name, base))
+
+if not reinstall:
+    sys.exit(0)
+
+for name, base in reinstall:
+    cmd = [sys.executable, "-m", "pip", "install", "--upgrade", "--no-deps", "--index-url", index, f"{name}=={base}"]
+    subprocess.check_call(cmd)
+PY
 }
 
 ensure_python_env() {
@@ -463,7 +505,11 @@ ensure_python_env "${REQUESTED_ENV}"
 
 source "${REQUESTED_ENV}/bin/activate"
 
-install_python_dependencies "${REQUESTED_ENV}"
+torch_index="$(select_torch_index)"
+install_python_dependencies "${REQUESTED_ENV}" "${torch_index}"
+if [[ -n "${torch_index}" && "${torch_index}" != "https://download.pytorch.org/whl/cpu" ]]; then
+  ensure_cuda_wheels "${REQUESTED_ENV}" "${torch_index}"
+fi
 maybe_clone_cutlass
 
 log "Bootstrap complete."

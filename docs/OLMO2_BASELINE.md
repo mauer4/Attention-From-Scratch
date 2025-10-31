@@ -25,15 +25,18 @@ etc.) while leaving the system Python untouched.
 ## 2. Run a Baseline Generation
 
 ```bash
-cd llm_original/olmo_2_repo
-python -m olmo.generate --help               # inspect CLI entrypoints
-# Example (see upstream README for full option set):
-# python -m olmo.generate --model allenai/OLMo-2-1124-13B-Instruct --prompt "Vast.ai smoke test"
+python inference/Olmo_2/run_from_snapshot.py \
+  --prompt "Vast.ai smoke test" \
+  --max-new-tokens 128 \
+  --device cuda
 ```
 
-The upstream CLI loads weights from the Hugging Face Hub by default. To prefer
-the staged snapshot, set the appropriate flags documented in AllenAI's README,
-pointing them at `llm_raw/olmo_2/`.
+This uses the locally staged snapshot via `transformers` (v4.48+). Prefer the
+`--device cuda` flag on GPUs to avoid CPU fallback. Alternatively, use the Make
+wrapper: `make run-olmo ARGS='--prompt "Vast.ai smoke test" --max-new-tokens 128 --device cuda'`.
+
+If you need to compare against AllenAI’s CLI, run `make fetch-olmo` and follow
+`llm_original/olmo_2_repo/README.md`, but that flow is optional for the baseline.
 
 ## 3. Next Steps Toward Profiling
 

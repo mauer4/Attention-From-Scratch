@@ -1,4 +1,4 @@
-.PHONY: setup setup-vast download-assets fetch-olmo allenai-help bootstrap-log
+.PHONY: setup setup-vast download-assets run-olmo fetch-olmo allenai-help bootstrap-log
 
 PYTHON ?= python3
 VENV ?= .venv-olmo2
@@ -12,11 +12,23 @@ setup-vast:
 download-assets:
 	@bash -lc "source \"$(VENV)/bin/activate\" && $(PYTHON) scripts/download_olmo2_assets.py"
 
+run-olmo:
+	@bash -lc 'source "$(VENV)/bin/activate" && $(PYTHON) inference/Olmo_2/run_from_snapshot.py $(ARGS)'
+
 fetch-olmo:
 	@bash scripts/fetch_olmo2_repo.sh "$(VENV)"
 
 allenai-help:
-	@bash -lc 'source "$(VENV)/bin/activate" && cd llm_original/olmo_2_repo && $(PYTHON) -m olmo.generate --help'
+	@bash -lc 'source "$(VENV)/bin/activate" && $(PYTHON) - <<"PY"
+	import pathlib
+	import olmo
+
+	repo_root = pathlib.Path(olmo.__file__).resolve().parents[1]
+	readme = repo_root / "inference" / "README.md"
+	print("OLMo package located at:", repo_root)
+	print("\nRefer to the AllenAI inference notes here:\n", readme)
+	print("\n(Flow 1 tooling relies on scripts under llm_original/olmo_2_repo/inference/.)")
+	PY'
 
 bootstrap-log:
 	@if ls -rt logs/bootstrap_*.log >/dev/null 2>&1; then \

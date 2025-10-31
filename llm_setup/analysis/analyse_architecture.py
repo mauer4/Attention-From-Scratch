@@ -10,7 +10,7 @@ import argparse
 import csv
 import json
 import os
-from typing import Iterable, List, Sequence, Tuple
+from typing import Iterable, List, Sequence
 
 
 class Metadata:
@@ -52,12 +52,10 @@ def render_table(headers: Sequence[str], rows: Iterable[Sequence[str]]) -> str:
 
     border = "+" + "+".join("-" * (w + 2) for w in widths) + "+"
     header_line = "| " + " | ".join(h.ljust(widths[i]) for i, h in enumerate(headers)) + " |"
-
     body_lines = [
         "| " + " | ".join(cell.ljust(widths[i]) for i, cell in enumerate(row)) + " |"
         for row in materialized_rows
     ]
-
     return "\n".join([border, header_line, border] + body_lines + [border])
 
 
@@ -124,7 +122,7 @@ def print_parameter_summary(metadata: Metadata):
         ("Token embeddings", format_int(counts["embeddings"])),
         ("All transformer layers", format_int(counts["all_layers"])),
         ("  per layer", format_int(counts["per_layer_total"])),
-        ("Final RMSNorm", format_int(counts["final_norm"])),
+        ("Final norm", format_int(counts["final_norm"])),
         ("LM head", format_int(counts["lm_head"])),
         ("Total", format_int(counts["total"])),
     ]
@@ -133,59 +131,57 @@ def print_parameter_summary(metadata: Metadata):
     print()
 
 
-def build_tensor_rows(metadata: Metadata) -> Tuple[Sequence[str], List[Sequence[str]]]:
+def build_tensor_rows(metadata: Metadata):
     hidden = metadata.hidden_size
-    ffn = metadata.intermediate_size
     heads = metadata.num_heads
+    kv_heads = metadata.num_kv_heads
     head_dim = metadata.head_dim
+    ffn = metadata.intermediate_size
     rotary = metadata.rotary_dim
 
-    headers = ["Scope", "Tensor", "Shape / Params", "Details"]
-
-    rows: List[Sequence[str]] = [
+    rows = []
+    rows.append(
         (
             "Embeddings",
             "model.embed_tokens.weight",
             f"{metadata.vocab_size} x {hidden}",
-            "Token embedding matrix",
-        ),
-        (
-            "Rotary",
-            "rope",
-            f"rotary_dim={rotary}",
-            f"theta={metadata.rope_theta}, heads={heads}, head_dim={head_dim}",
-        ),
-    ]
+            "Token embeddings",
+        )
+    )
 
     for layer in range(metadata.num_layers):
-        scope = f"Layer {layer}"
+        scope = f"model.layers.{layer}"
         rows.extend(
             [
-                (scope, "self_attn.q_norm.weight", f"{hidden}", "Query RMSNorm scale"),
-                (scope, "self_attn.k_norm.weight", f"{hidden}", "Key RMSNorm scale"),
+                (
+                    scope,
+                    "input_layernorm.weight",
+                    f"{hidden}",
+                    "RMSNorm before attention",
+                ),
                 (
                     scope,
                     "self_attn.q_proj.weight",
-                    f"{hidden} x {hidden}",
-                    f"Projects hidden -> heads ({heads}x{head_dim}), rotary_dim={rotary}",
+                    f"{heads * head_dim} x {hidden}",
+                    "Query projection",
                 ),
                 (
                     scope,
                     "self_attn.k_proj.weight",
-                    f"{hidden} x {hidden}",
-                    f"KV projection, heads={metadata.num_kv_heads}",
+                    f"{kv_heads * head_dim} x {hidden}",
+                    "Key projection",
                 ),
                 (
                     scope,
                     "self_attn.v_proj.weight",
-                    f"{hidden} x {hidden}",
+                    f"{kv_heads * head_dim} x {hidden}",
                     "Value projection",
                 ),
                 (
                     scope,
                     "self_attn.o_proj.weight",
-                    f"{hidden} x {hidden}",
-                    "Output projection (concats heads)",
+                    f"{hidden} x {heads * head_dim}",
+                    "Output projection",
                 ),
                 (
                     scope,
@@ -197,7 +193,7 @@ def build_tensor_rows(metadata: Metadata) -> Tuple[Sequence[str], List[Sequence[
                     scope,
                     "mlp.gate_proj.weight",
                     f"{ffn} x {hidden}",
-                    f"FFN gate ({metadata.hidden_act})",
+                    "FFN gate projection",
                 ),
                 (
                     scope,
@@ -248,6 +244,7 @@ def build_tensor_rows(metadata: Metadata) -> Tuple[Sequence[str], List[Sequence[
             )
         )
 
+    headers = ["Scope", "Tensor", "Shape", "Description"]
     return headers, rows
 
 

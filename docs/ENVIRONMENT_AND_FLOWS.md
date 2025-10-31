@@ -24,6 +24,10 @@ you start working on the custom kernels. Every run streams to
 `logs/bootstrap_<timestamp>.log`, which makes post-mortem debugging easy on
 shared machines. When driver detection is unavailable the script defaults to
 CUDA 12.8, matching the repository’s primary toolchain.
+During Python dependency installation the bootstrapper also double-checks the
+PyTorch wheels: if CPU-only builds were pinned in the lock file it
+automatically reinstalls the matching CUDA wheels from the detected PyTorch
+index so a subsequent `make setup` keeps the venv GPU-ready.
 
 ### Dependency locking
 
@@ -45,35 +49,30 @@ leave it activated. Follow the final log line—typically
 record under `logs/bootstrap_<timestamp>.log` so you can audit package installs
 afterwards.
 
-## 2. Flow 1 – AllenAI reference inference
+## 2. Flow 1 – `run_from_snapshot.py` (Hugging Face loader)
 
-The AllenAI repository is the authoritative implementation today. Use it as the
-baseline while the custom engine is under construction.
+This flow drives the legacy Hugging Face bridge so you can generate text from
+the locally staged snapshot without touching the upstream repository.
 
 1. **Bootstrap and activate the environment**
    ```bash
    bash setup/bootstrap_host.sh --python-env .venv-olmo2
    source .venv-olmo2/bin/activate
    ```
-2. **Clone or refresh the upstream repo**
-   ```bash
-   bash scripts/fetch_olmo2_repo.sh .venv-olmo2
-   ```
-   This pulls the latest `allenai/OLMo` tree into `llm_original/olmo_2_repo/` and
-   installs its editable package plus `inference/requirements.txt`.
-3. **Stage weights and tokenizer files (optional but recommended)**
+2. **Stage weights, tokenizer, and metadata**
    ```bash
    python scripts/download_olmo2_assets.py
    ```
-   The helper mirrors the Hugging Face snapshot into `llm_raw/olmo_2/` so the
-   upstream repo can read from a local cache instead of re-downloading.
-4. **Invoke the AllenAI CLI**
+   Files land under `llm_raw/olmo_2/` and can be reused across subsequent runs.
+3. **Generate text**
    ```bash
-   cd llm_original/olmo_2_repo
-   python -m olmo.generate --help
+   python inference/Olmo_2/run_from_snapshot.py \
+     --prompt "Summarize the Olmo 2 architecture." \
+     --max-new-tokens 64
    ```
-   Consult `llm_original/olmo_2_repo/README.md` for concrete generation commands,
-   configuration files, and profiling tips. Exit the venv with `deactivate`.
+   or use the Make shortcut: `make run-olmo ARGS='--prompt "..." --max-new-tokens 64'`.
+   The script wires the staged assets into `transformers` (v4.48+) and prints the
+   completion plus throughput metrics.
 
 ## 3. Flow 2 – Custom attention engine (planned)
 
@@ -85,7 +84,21 @@ The from-scratch engine will live under `src/`, `python_bindings/`, and
 - Track progress in `docs/PROJECT_PLAN.md`; once kernels and drivers are merged,
   this section will include build and execution notes for the bespoke runner.
 
-## 4. Vast.ai / restricted environment tips
+## 4. Optional – AllenAI reference repository
+
+When you need parity with the upstream CLI, clone the official repo:
+
+```bash
+make fetch-olmo          # set FETCH_OLMO_UPDATE=1 to pull new commits
+source .venv-olmo2/bin/activate
+cd llm_original/olmo_2_repo
+python -m olmo.generate --help
+```
+
+The helper keeps the repo synced under `llm_original/olmo_2_repo/` while
+preserving your staged assets.
+
+## 5. Vast.ai / restricted environment tips
 
 - Prefer the project bootstrap script even when you cannot elevate privileges;
   set `SKIP_SYSTEM_PACKAGES=1` and `SKIP_CUDA_TOOLKIT=1` to avoid failing on
@@ -95,7 +108,7 @@ The from-scratch engine will live under `src/`, `python_bindings/`, and
 - Cache the `.venv-olmo2` directory across reboots to avoid repeated wheel
   downloads.
 
-## 5. Optional components
+## 6. Optional components
 
 - **CUTLASS** – Clone only when you start building the custom CUDA kernels:  
   `ATTN_INCLUDE_CUTLASS=1 bash setup/bootstrap_host.sh --with-cutlass`

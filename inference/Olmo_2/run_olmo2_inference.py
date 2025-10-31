@@ -15,8 +15,25 @@ try:
     import torch  # type: ignore
 except ModuleNotFoundError:  # pragma: no cover - surfaced at runtime
     torch = None  # type: ignore[assignment]
+try:  # Ensure custom HF components are available when installed.
+    from hf_olmo import OLMoConfig, OLMoForCausalLM  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    OLMoConfig = None  # type: ignore[assignment]
+    OLMoForCausalLM = None  # type: ignore[assignment]
 from rich.console import Console
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+if OLMoConfig is not None and OLMoForCausalLM is not None:  # pragma: no cover - optional registration
+    from transformers import AutoConfig
+
+    try:
+        AutoConfig.register("olmo2", OLMoConfig)
+    except ValueError:
+        pass
+    try:
+        AutoModelForCausalLM.register(OLMoConfig, OLMoForCausalLM)
+    except ValueError:
+        pass
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_SNAPSHOT = ROOT / "llm_raw" / "olmo_2" / "raw_weights"
@@ -323,7 +340,7 @@ def main() -> None:
     try:
         tokenizer = AutoTokenizer.from_pretrained(
             str(tokenizer_path),
-            use_fast=True,
+            use_fast=False,
             local_files_only=True,
         )
     except OSError as exc:
@@ -389,6 +406,7 @@ def main() -> None:
         batch_size=1,
         disable_tqdm=True,
         max_new_tokens=args.max_new_tokens,
+        do_sample=True,
         temperature=args.temperature,
     )
     duration = time.perf_counter() - start

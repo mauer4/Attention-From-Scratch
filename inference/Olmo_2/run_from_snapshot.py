@@ -12,4 +12,4 @@ if str(ROOT) not in sys.path:
 from inference.Olmo_2.run_olmo2_inference import main  # noqa: E402
 
 if __name__ == "__main__":
-    main()\n\n
+    main()

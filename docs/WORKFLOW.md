@@ -13,11 +13,12 @@
    reuse this cache.
 
 3. **Run the chosen flow**  
-   - Flow 1 (AllenAI reference): `scripts/fetch_olmo2_repo.sh` keeps the official
-     repo mirrored under `llm_original/olmo_2_repo/`; activate the venv and use
-     the upstream CLI.
+   - Flow 1 (Hugging Face bridge): `inference/Olmo_2/run_from_snapshot.py`
+     generates text from the staged snapshot (`make run-olmo ARGS='...'`).
    - Flow 2 (custom engine): `src/`, `python_bindings/`, and
      `inference/From_Scratch/` will host the bespoke runtime as it lands.
+   - Optional parity: `scripts/fetch_olmo2_repo.sh` syncs AllenAI’s repository
+     when you want to cross-check with their CLI.
 
 4. **Analysis and benchmarking**  
    Utilities under `scripts/` and `llm_setup/analysis/` inspect safetensors,

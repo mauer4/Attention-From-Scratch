@@ -9,12 +9,16 @@ log() {
   echo "[fetch-olmo] $*"
 }
 
+UPDATE_REPO=${FETCH_OLMO_UPDATE:-0}
+
 if [[ ! -d "${REPO_DIR}/.git" ]]; then
   log "Cloning allenai/OLMo into ${REPO_DIR}."
   git clone --depth 1 https://github.com/allenai/OLMo.git "${REPO_DIR}"
-else
-  log "Updating existing repository at ${REPO_DIR}."
+elif [[ "${UPDATE_REPO}" == "1" ]]; then
+  log "Updating existing repository at ${REPO_DIR} (FETCH_OLMO_UPDATE=1)."
   git -C "${REPO_DIR}" pull --ff-only
+else
+  log "Repository already present at ${REPO_DIR}; skipping git pull."
 fi
 
 log "Ensuring Python environment via setup/bootstrap_host.sh."
@@ -27,10 +31,11 @@ SKIP_CUDA_TOOLKIT=${SKIP_CUDA_TOOLKIT:-0} \
 # shellcheck disable=SC1091
 source "${ENV_DIR}/bin/activate"
 
-pip install -e "${REPO_DIR}"
-TMP_REQ=$(mktemp)
-sed 's|git+ssh://git@github.com/|git+https://github.com/|' "${REPO_DIR}/inference/requirements.txt" > "${TMP_REQ}"
-pip install -r "${TMP_REQ}"
+pip install --no-deps -e "${REPO_DIR}"
+TMP_REQ="$(mktemp "${REPO_DIR}/inference/requirements.XXXXXX.txt")"
+sed -E 's|git+ssh://git@github.com/|git+https://github.com/|; /^(compression|efficiency)\//d' \
+  "${REPO_DIR}/inference/requirements.txt" > "${TMP_REQ}"
+pip install --no-deps -r "${TMP_REQ}"
 rm -f "${TMP_REQ}"
 
 cat <<EOF

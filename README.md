@@ -12,7 +12,7 @@ I'm mapping the landscape of large language model inference so an individual dev
 - `inference/Olmo_2/` - experimental Hugging Face wrappers and GPU health checks retained for troubleshooting during the transition to the custom engine.
 - `inference/From_Scratch/` - staging area for the bespoke attention implementation (currently a placeholder awaiting engine bring-up).
 - `llm_raw/olmo_2/` - canonical storage for downloaded checkpoints, tokenizer assets, and upstream metadata.
-- `llm_setup/analysis/` - safetensor inspection utilities (`get_tensor_shapes_form_safetensors.py`, `verify_tensor_extraction.py`, etc.) used during asset validation.
+- `llm_setup/analysis/` - safetensor inspection utilities (`analyse_architecture.py`, `dump_state_dict_summary.py`, `get_tensor_shapes_form_safetensors.py`, etc.) used during asset validation.
 - `llm_original/olmo_2_repo/` - pristine clone of AllenAI's official OLMo repository, fetched via `scripts/fetch_olmo2_repo.sh`.
 - `setup/` - light wrapper notes that point at the unified bootstrap script.
 - `scripts/` - automation for environment setup (`bootstrap_host.sh`), asset download, and architecture/state-dict analysis.
@@ -28,15 +28,18 @@ The complete decision matrix and step-by-step instructions now live in
   `SKIP_SYSTEM_PACKAGES=1` on constrained hosts or `--with-cutlass` when you
   start working on custom kernels. The script creates (or reuses) the venv but
   leaves activation (`source <venv>/bin/activate`) to you after it finishes.
-- Flow 1 — **AllenAI reference inference**  
-  `make fetch-olmo` clones/updates `allenai/OLMo` and installs its inference
-  stack. Pair it with `make download-assets` if you want to keep weights cached
-  under `llm_raw/olmo_2/`, then use `make allenai-help` (or follow the upstream
-  README) for CLI usage.
+- Flow 1 — **run_from_snapshot (Hugging Face loader)**  
+  `make download-assets` stages the weights/tokenizer locally, then
+  `make run-olmo ARGS='--prompt "Summarize OLMo" --max-new-tokens 64'` drives
+  `inference/Olmo_2/run_from_snapshot.py` for quick generation runs.
 - Flow 2 — **Custom engine (in development)**  
   Shares the same environment but will execute code under `inference/From_Scratch/`
   once the kernels land. Until then, use Flow 1 for baselines and refer to
   `docs/PROJECT_PLAN.md` for roadmap status.
+- Optional — **AllenAI reference repository**  
+  `make fetch-olmo` clones `allenai/OLMo` (set `FETCH_OLMO_UPDATE=1` to pull
+  upstream changes). The upstream CLI lives under `llm_original/olmo_2_repo/`
+  and is useful for cross-checking behaviour.
 
 ## Custom Engine Roadmap
 
@@ -50,8 +53,8 @@ Until the custom pipeline is checked in, use the baseline flows to gather perfor
 
 ## Analysis and Benchmarking Toolkit
 
-- `scripts/analyse_architecture.py` summarises model geometry (console tables plus optional CSV).
-- `scripts/dump_state_dict_summary.py` enumerates every tensor in the safetensors shards.
+- `llm_setup/analysis/analyse_architecture.py` summarises model geometry (console tables plus optional CSV).
+- `llm_setup/analysis/dump_state_dict_summary.py` enumerates every tensor in the safetensors shards.
 - `llm_setup/analysis/` scripts assist with manual tensor extraction and consistency checks.
 - `docs/OLMO2_BASELINE.md` captures the Vast.AI workflow for profiling with Nsight tools.
 - `benchmarks/` is the landing zone for throughput reports, Nsight traces, and comparison notes.
