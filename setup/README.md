@@ -1,23 +1,21 @@
 # Setup
 
-This area captures everything required to bootstrap local or containerised
-environments before working with the model artifacts.
+The primary entrypoint lives at `setup/bootstrap_host.sh`. It detects your
+package manager, provisions CUDA when required, creates (or reuses) the target
+virtual environment, installs the locked dependencies from
+`requirements/locks/`, and logs detailed output to `logs/bootstrap_<timestamp>.log`.
 
-- `venv/` - helper scripts or notes for creating/activating virtual
-  environments.
-- `requirements/` - dependency lists or lock files (used by the helper scripts).
-- `docker/` - optional container definitions.
+Usage examples from the repository root:
 
-Helper scripts:
+```bash
+bash setup/bootstrap_host.sh            # Full flow (system packages + CUDA + venv)
+SKIP_SYSTEM_PACKAGES=1 bash setup/bootstrap_host.sh --python-env ~/.venvs/olmo
+```
 
-- `bare_metal_setup.sh` - installs apt-based prerequisites and bootstraps a
-  Python virtual environment in one step.
-- `venv/create_*.{ps1,sh,csh}` - shell-specific helpers for managing the venv
-  when system packages are already present.
+The script creates the environment but does **not** activate it for you; follow
+the final line of the log (`source <path>/bin/activate`) in new shells.
 
-Run `venv/create_venv.ps1` to create and populate a Python virtual environment
-using the requirements file, or replicate those commands manually on other
-platforms.
-
-The rest of the repository assumes these steps have been run first.
+Windows users should run the same commands inside WSL2. For additional options
+(`--cuda-toolkit`, `--lock`, `--with-cutlass`, etc.), run
+`bash setup/bootstrap_host.sh --help`.
 

@@ -4,36 +4,36 @@ This guide sets up an isolated Python environment to run AllenAI's Olmo 2 checkp
 
 ## 1. Prepare the Environment
 
+Follow the decision matrix in [`docs/ENVIRONMENT_AND_FLOWS.md`](ENVIRONMENT_AND_FLOWS.md).
+On Vast.ai we typically disable package/toolkit installation and reuse the host
+driver stack:
+
 ```bash
 git clone https://github.com/mauer4/Attention-From-Scratch.git
 cd Attention-From-Scratch
 
-# Create (or reuse) a dedicated venv for Olmo 2.
-bash scripts/setup_olmo2_env.sh [.venv-olmo2]
+SKIP_SYSTEM_PACKAGES=1 SKIP_CUDA_TOOLKIT=1 \
+  bash setup/bootstrap_host.sh --python-env .venv-olmo2
 
 source .venv-olmo2/bin/activate
 python scripts/download_olmo2_assets.py
 ```
 
-The setup script installs the CUDA-enabled PyTorch wheels plus the Hugging Face stack (`transformers`, `accelerate`, `sentencepiece`, `bitsandbytes`, etc.). No changes are made to the system Python.
+The bootstrap script installs from the locked dependency set (PyTorch, HF stack,
+etc.) while leaving the system Python untouched.
 
 ## 2. Run a Baseline Generation
 
 ```bash
-python inference/Olmo_2/run_from_snapshot.py \
-  --prompt "Summarize the Olmo 2 architecture." \
-  --max-new-tokens 128 \
-  --temperature 0.7
+cd llm_original/olmo_2_repo
+python -m olmo.generate --help               # inspect CLI entrypoints
+# Example (see upstream README for full option set):
+# python -m olmo.generate --model allenai/OLMo-2-1124-13B-Instruct --prompt "Vast.ai smoke test"
 ```
 
-What happens:
-
-- The script loads the tokenizer from `llm_raw/olmo_2/raw_tokenizer/` and stitches the weights plus metadata into a temporary Hugging Face view for AllenAI's reference utilities.
-- It keeps the checkpoint offline—no Hugging Face Hub access is required once the assets are staged.
-- It optionally reports tokens/sec for a quick throughput estimate.
-- You can save output using `--output-path generated.txt`.
-- Use `--compile` to experiment with `torch.compile` on PyTorch 2.0+.
-- Pass `--snapshot-path` or `--tokenizer-path` to target alternative staged weights (e.g., 7B vs. 13B variants).
+The upstream CLI loads weights from the Hugging Face Hub by default. To prefer
+the staged snapshot, set the appropriate flags documented in AllenAI's README,
+pointing them at `llm_raw/olmo_2/`.
 
 ## 3. Next Steps Toward Profiling
 
@@ -42,7 +42,7 @@ The goal is to transition from “baseline hf-inference” into detailed kernel 
 - Record consistent prompts and batch sizes to compare throughput vs. the forthcoming custom engine.
 - Capture GPU utilization (`nvidia-smi dmon`) and memory footprints during runs.
 - Install Nsight Systems / Nsight Compute inside the Vast container or stream the session back to a local GUI. NVIDIA’s container images already include the CLI tools (`nsys`, `ncu`).
-- Re-run the baseline script under Nsight to collect timeline traces and kernel metrics (e.g., `nsys profile python inference/Olmo_2/run_from_snapshot.py ...`).
+- Re-run the AllenAI CLI under Nsight to collect timeline traces and kernel metrics (e.g., `nsys profile python -m olmo.generate --config <...>`).
 - Store reports under `benchmarks/` (keep traces outside Git or add to `.gitignore`).
 
 These measurements will anchor the performance targets for the from-scratch implementation described in `docs/PROJECT_PLAN.md`.

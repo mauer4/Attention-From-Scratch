@@ -118,14 +118,14 @@ def _import_eval_utils(engine_root: Path):
                     ) from secondary
                 if secondary_missing == "torch":
                     raise SystemExit(
-                        "PyTorch is missing. Activate the `.venv-olmo2` environment created by scripts/setup_olmo2_env.sh."
+                        "PyTorch is missing. Activate the `.venv-olmo2` environment created by setup/bootstrap_host.sh."
                     ) from secondary
                 raise SystemExit(
                     f"Dependency {secondary_missing!r} is unavailable. "
                     "Re-run scripts/fetch_olmo2_repo.sh to finish installing upstream requirements."
                 ) from secondary
         elif missing == "torch":
-            hint = "PyTorch is missing. Activate the `.venv-olmo2` environment created by scripts/setup_olmo2_env.sh."
+            hint = "PyTorch is missing. Activate the `.venv-olmo2` environment created by setup/bootstrap_host.sh."
             raise SystemExit(hint) from exc
         else:
             hint = (
@@ -264,7 +264,7 @@ def main() -> None:
 
     if torch is None:
         raise SystemExit(
-            "PyTorch is required. Activate the `.venv-olmo2` environment created by scripts/setup_olmo2_env.sh."
+            "PyTorch is required. Activate the `.venv-olmo2` environment created by setup/bootstrap_host.sh."
         )
 
     eval_utils = _import_eval_utils(args.engine_root)

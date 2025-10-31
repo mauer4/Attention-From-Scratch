@@ -1,6 +1,8 @@
 # Olmo 2 Inference Scripts
 
-Utilities for running generation with the staged OLMo 2 snapshot.
+Legacy utilities for running generation with the staged OLMo 2 snapshot. The
+primary inference flow now relies on AllenAI's repository; these scripts remain
+available for debugging and quick experiments.
 
 - `run_from_snapshot.py` - invokes `run_olmo2_inference.py` so you can exercise the locally staged weights.
 - `run_olmo2_inference.py` - loads the staged weights (`raw_weights/` + metadata) via AllenAI's inference helpers.

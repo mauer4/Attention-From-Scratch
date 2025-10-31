@@ -1,22 +1,29 @@
 # Repository Workflow
 
-1. **Setup**
-   - Run the appropriate venv script under `setup/venv/` (or `setup/bare_metal_setup.sh`) to provision the Python environment.
-   - Install dependencies from `setup/requirements/requirements.txt` (handled automatically by the helper scripts).
-   - Optional: build/run the Docker image for containerised development.
+1. **Bootstrap the environment**  
+   Run `bash setup/bootstrap_host.sh` (or set the `SKIP_SYSTEM_PACKAGES` /
+   `SKIP_CUDA_TOOLKIT` switches on restricted hosts). The script installs from
+   the locked dependency set in `requirements/locks/olmo.lock`. See
+   [`docs/ENVIRONMENT_AND_FLOWS.md`](ENVIRONMENT_AND_FLOWS.md) for the full
+   decision matrix.
 
-2. **LLM Setup**
-   - `python scripts/download_olmo2_assets.py` fetches weights/metadata into `llm_raw/olmo_2/` and runs the analysis smoke tests.
-   - Additional analysis utilities under `llm_setup/analysis/` regenerate inventories or verify shard integrity.
+2. **Stage raw model assets**  
+   `python scripts/download_olmo2_assets.py` mirrors weights, tokenizer files,
+   and metadata into `llm_raw/olmo_2/` and runs the validation suite. Both flows
+   reuse this cache.
 
-3. **LLM Raw**
-   - Treat `llm_raw/olmo_2/` as read-only inputs (weights, tokenizer artefacts, snapshot cache, reference test scripts).
+3. **Run the chosen flow**  
+   - Flow 1 (AllenAI reference): `scripts/fetch_olmo2_repo.sh` keeps the official
+     repo mirrored under `llm_original/olmo_2_repo/`; activate the venv and use
+     the upstream CLI.
+   - Flow 2 (custom engine): `src/`, `python_bindings/`, and
+     `inference/From_Scratch/` will host the bespoke runtime as it lands.
 
-4. **LLM Original**
-   - `scripts/fetch_olmo2_repo.sh` clones AllenAI's repository into `llm_original/olmo_2_repo/` for reference.
+4. **Analysis and benchmarking**  
+   Utilities under `scripts/` and `llm_setup/analysis/` inspect safetensors,
+   summarise architecture layouts, and support Nsight profiling. Drop artefacts
+   into `benchmarks/` as you collect numbers.
 
-5. **Inference**
-   - Use `inference/Olmo_2/` for generation scripts/logging with the staged snapshot.
-   - `inference/From_Scratch/` is reserved for the custom engine once implemented.
-
-This flow mirrors the diagram in the planning notes and keeps setup tasks, raw assets, and exploratory code cleanly separated.
+Make targets such as `make setup`, `make setup-vast`, `make download-assets`,
+`make fetch-olmo`, and `make allenai-help` mirror the most common commands if
+you prefer short invocations over typing each pipeline step.

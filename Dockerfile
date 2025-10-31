@@ -16,8 +16,8 @@ RUN apt-get update && \
         clang \
         curl \
         ca-certificates \
-        cuda-toolkit-12-8 \
-        cuda-nsight-systems-12-8 && \
+        pkg-config \
+        unzip && \
     rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv \
@@ -26,21 +26,22 @@ ENV VIRTUAL_ENV=/opt/venv \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-RUN python3 -m venv "${VIRTUAL_ENV}"
-
-COPY setup/requirements/requirements.txt /tmp/requirements.txt
-
-RUN "${VIRTUAL_ENV}/bin/pip" install --upgrade pip && \
-    "${VIRTUAL_ENV}/bin/pip" install --no-cache-dir -r /tmp/requirements.txt && \
-    rm /tmp/requirements.txt
+RUN mkdir -p setup requirements/locks
 
 WORKDIR /workspace
 
-COPY . /workspace
+COPY setup/bootstrap_host.sh setup/bootstrap_host.sh
+COPY pyproject.toml pyproject.toml
+COPY requirements/locks/olmo.lock requirements/locks/olmo.lock
 
-RUN mkdir -p third_party && \
-    [ -d third_party/cutlass ] || git clone --depth 1 https://github.com/NVIDIA/cutlass.git third_party/cutlass && \
-    cmake -S . -B build -G Ninja && \
-    cmake --build build
+RUN chmod +x setup/bootstrap_host.sh && \
+    bash setup/bootstrap_host.sh \
+      --system none \
+      --python-env "${VIRTUAL_ENV}" \
+      --cuda-toolkit none \
+      --extras olmo \
+      --lock requirements/locks/olmo.lock
+
+COPY . /workspace
 
 CMD ["/bin/bash"]
