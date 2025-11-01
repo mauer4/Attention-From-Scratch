@@ -25,7 +25,7 @@ REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 MODEL_REGISTRY = {
-    "olmo2": "allenai/OLMo-2-1124-13B-Instruct",
+    "olmo2": "allenai/OLMo-2-1124-13B",
 }
 
 METADATA_FILES = {
