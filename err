@@ -1,0 +1,5 @@
+::notice::OLMo snapshot sanity running on GPU: NVIDIA GeForce RTX 5090
+Created temporary snapshot view at /tmp/tmpwnbkqw_e for HF-compatible loading.
+Target dtype: torch.bfloat16
+Loading OLMo 2 snapshot from /tmp/tmpwnbkqw_e using Hugging Face transformers 
+(dtype=torch.bfloat16)...

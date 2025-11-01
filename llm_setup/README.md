@@ -25,4 +25,4 @@ Artifacts and scripts used while preparing or inspecting model assets.
   Sanity-checks that required raw assets exist (weights, metadata, tokenizer)
   and that the analysis scripts can resolve the expected paths.
 
-These scripts assume raw model files live under `../llm_raw/`.*** End Patch***
+These scripts assume raw model files live under `../weights/`.

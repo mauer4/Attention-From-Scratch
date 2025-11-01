@@ -11,7 +11,16 @@ import struct
 from pathlib import Path
 from typing import Dict, Tuple
 
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
 import torch
+
+from project_config import get_model_paths, load_config
 
 
 DTYPE_MAP: Dict[str, torch.dtype] = {
@@ -76,8 +85,7 @@ def main() -> None:
     parser.add_argument("--to-float32", action="store_true", help="Convert tensor to float32 before saving.")
     args = parser.parse_args()
 
-    root = Path(__file__).resolve().parents[2]
-    default_weights_dir = root / "llm_raw" / "olmo_2" / "raw_weights"
+    default_weights_dir = get_model_paths(load_config())["weights"]
     shard_path = args.file
     if not shard_path.is_absolute():
         candidate = default_weights_dir / shard_path

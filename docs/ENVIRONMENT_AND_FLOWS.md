@@ -63,7 +63,7 @@ the locally staged snapshot without touching the upstream repository.
    ```bash
    python scripts/download_olmo2_assets.py
    ```
-   Files land under `llm_raw/olmo_2/` and can be reused across subsequent runs.
+   Files land under `weights/olmo2/` and can be reused across subsequent runs.
 3. **Generate text**
    ```bash
    python inference/Olmo_2/run_from_snapshot.py \
@@ -80,7 +80,7 @@ The from-scratch engine will live under `src/`, `python_bindings/`, and
 `inference/From_Scratch/`. Until those components land:
 
 - Bootstrap the environment the same way as Flow 1.
-- Keep assets staged under `llm_raw/olmo_2/` using `scripts/download_olmo2_assets.py`.
+- Keep assets staged under `weights/olmo2/` using `scripts/download_weights.py --model-name olmo2`.
 - Track progress in `docs/PROJECT_PLAN.md`; once kernels and drivers are merged,
   this section will include build and execution notes for the bespoke runner.
 

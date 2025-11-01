@@ -1,8 +1,2 @@
-set(TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_placeholder.cpp
-)
-
-add_executable(attention_tests ${TEST_SOURCES})
-target_link_libraries(attention_tests PRIVATE attention_core)
-
-add_test(NAME attention_placeholder COMMAND attention_tests)
+add_executable(test_placeholder test_placeholder.cpp)
+target_link_libraries(test_placeholder attention_core)

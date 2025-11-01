@@ -1,0 +1,43 @@
+# Auto-generated maintenance policy for Attention-From-Scratch
+checks:
+  triggers:
+    - on_push
+    - on_pull_request
+    - weekly_cron
+  tasks:
+    - name: gpu_probe
+      command: python setup_env/check_gpu.py
+    - name: venv_integrity
+      command: bash setup_env/create_venv.sh
+    - name: dependencies
+      command: bash setup_env/install_deps.sh
+    - name: config
+      command: python setup_env/verify_config.py
+    - name: sanity_inference
+      command: python scripts/test_inference.py
+  expectations:
+    directories:
+      - setup_env
+      - scripts
+      - src
+      - weights
+      - configs
+      - reports
+    gitignore_entries:
+      - .venv/
+      - __pycache__/
+      - "*.log"
+      - reports/
+      - "*.safetensors"
+      - .env
+policies:
+  lockfile:
+    on_requirements_change: bash setup_env/install_deps.sh
+  report_retention:
+    keep: 5
+  archive_strays_to: legacy/
+outputs:
+  - reports/auto_verification.json
+  - reports/auto_verification.md
+  - reports/auto_verification.html
+personality: diagnostic

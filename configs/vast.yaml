@@ -1,0 +1,7 @@
+include: default.yaml
+runtime:
+  device: cuda
+  dtype: bfloat16
+  notes: |
+    Vast.ai instances expose NVIDIA GPUs directly. The setup scripts skip Docker
+    provisioning and install dependencies into the project-managed virtual environment.

@@ -10,10 +10,10 @@ setup-vast:
 	@SKIP_SYSTEM_PACKAGES=1 SKIP_CUDA_TOOLKIT=1 bash setup/bootstrap_host.sh --python-env "$(VENV)"
 
 download-assets:
-	@bash -lc "source \"$(VENV)/bin/activate\" && $(PYTHON) scripts/download_olmo2_assets.py"
+	@bash -lc "source \"$(VENV)/bin/activate\" && $(PYTHON) scripts/download_weights.py --model-name olmo2"
 
 run-olmo:
-	@bash -lc 'source "$(VENV)/bin/activate" && $(PYTHON) inference/Olmo_2/run_from_snapshot.py $(ARGS)'
+	@bash -lc 'source "$(VENV)/bin/activate" && $(PYTHON) scripts/run_from_snapshot.py $(ARGS)'
 
 fetch-olmo:
 	@bash scripts/fetch_olmo2_repo.sh "$(VENV)"

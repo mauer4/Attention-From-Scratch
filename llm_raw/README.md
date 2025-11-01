@@ -1,15 +1,12 @@
 # LLM Raw Assets
 
-Immutable downloads captured during experimentation.
+Legacy assets captured during early experimentation. Active weights, metadata,
+and tokenizer files now live under `../weights/olmo2/`.
 
-- `olmo_2/raw_weights/` - safetensors shards for the released OLMo-2 model.
-- `olmo_2/metadata/` - model configs, safetensors index, generated inventories,
-  and cached download state.
-- `olmo_2/raw_tokenizer/` - tokenizer JSON/config/merge files associated with the
-  checkpoint.
 - `olmo_2/test/` - reference scripts that exercise text generation with the
   released checkpoints.
+- other historical folders may appear when reproducing older download flows.
 
-Treat this area as read-only input data; processing scripts live under
-`../llm_setup/`.
+Treat this area as read-only reference material; processing scripts now expect
+the canonical layout rooted at `../weights/`.
 

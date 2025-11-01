@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download OLMo-2 weights/metadata, stage them under llm_raw/, and run basic checks."""
+"""Legacy downloader retained for reference. Prefer scripts/download_weights.py."""
 from __future__ import annotations
 
 import argparse
@@ -9,14 +9,19 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
 from huggingface_hub import snapshot_download
 
-ROOT = Path(__file__).resolve().parents[1]
-RAW_ROOT = ROOT / "llm_raw" / "olmo_2"
-HF_SNAPSHOT = RAW_ROOT / "hf_snapshot"
-RAW_WEIGHTS = RAW_ROOT / "raw_weights"
-RAW_TOKENIZER = RAW_ROOT / "raw_tokenizer"
-METADATA = RAW_ROOT / "metadata"
+from project_config import get_model_paths, load_config
+MODEL_PATHS = get_model_paths(load_config())
+WEIGHTS_DIR = MODEL_PATHS["weights"]
+TOKENIZER_DIR = MODEL_PATHS["tokenizer"]
+METADATA_DIR = MODEL_PATHS["metadata"]
+HF_SNAPSHOT = WEIGHTS_DIR / "_hf_snapshot"
 
 WEIGHT_SUFFIXES = {".safetensors"}
 TOKENIZER_FILES = {
@@ -37,21 +42,21 @@ METADATA_FILES = {
 
 def assets_present() -> bool:
     required_weights = sorted(f"model-0000{i}-of-00006.safetensors" for i in range(1, 7))
-    if not RAW_WEIGHTS.exists():
+    if not WEIGHTS_DIR.exists():
         return False
-    existing_weights = sorted(child.name for child in RAW_WEIGHTS.glob("model-*.safetensors"))
+    existing_weights = sorted(child.name for child in WEIGHTS_DIR.glob("model-*.safetensors"))
     if existing_weights != required_weights:
         return False
 
-    if not RAW_TOKENIZER.exists():
+    if not TOKENIZER_DIR.exists():
         return False
-    missing_tokenizers = [name for name in TOKENIZER_FILES if not (RAW_TOKENIZER / name).exists()]
+    missing_tokenizers = [name for name in TOKENIZER_FILES if not (TOKENIZER_DIR / name).exists()]
     if missing_tokenizers:
         return False
 
-    if not METADATA.exists():
+    if not METADATA_DIR.exists():
         return False
-    missing_metadata = [name for name in METADATA_FILES if not (METADATA / name).exists()]
+    missing_metadata = [name for name in METADATA_FILES if not (METADATA_DIR / name).exists()]
     if missing_metadata:
         return False
 
@@ -59,9 +64,9 @@ def assets_present() -> bool:
 
 
 def stage_files(snapshot_dir: Path) -> None:
-    RAW_WEIGHTS.mkdir(parents=True, exist_ok=True)
-    RAW_TOKENIZER.mkdir(parents=True, exist_ok=True)
-    METADATA.mkdir(parents=True, exist_ok=True)
+    WEIGHTS_DIR.mkdir(parents=True, exist_ok=True)
+    TOKENIZER_DIR.mkdir(parents=True, exist_ok=True)
+    METADATA_DIR.mkdir(parents=True, exist_ok=True)
 
     def move_file(src: Path, dest: Path) -> None:
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -74,11 +79,11 @@ def stage_files(snapshot_dir: Path) -> None:
             continue
         rel = path.relative_to(snapshot_dir)
         if rel.name in TOKENIZER_FILES:
-            move_file(path, RAW_TOKENIZER / rel.name)
+            move_file(path, TOKENIZER_DIR / rel.name)
         elif rel.suffix in WEIGHT_SUFFIXES:
-            move_file(path, RAW_WEIGHTS / rel.name)
+            move_file(path, WEIGHTS_DIR / rel.name)
         elif rel.name in METADATA_FILES:
-            move_file(path, METADATA / rel.name)
+            move_file(path, METADATA_DIR / rel.name)
 
     shutil.rmtree(snapshot_dir, ignore_errors=True)
 
@@ -107,12 +112,12 @@ def main() -> None:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force download even if assets already exist under llm_raw/olmo_2/",
+        help="Force download even if assets already exist under weights/",
     )
     args = parser.parse_args()
 
     if assets_present() and not args.force:
-        print("[cache] Existing weights/metadata detected under llm_raw/olmo_2; skipping download.")
+        print("[cache] Existing weights/metadata detected under the configured weights directory; skipping download.")
     else:
         HF_SNAPSHOT.mkdir(parents=True, exist_ok=True)
         print(f"[download] Fetching {args.model_id} ...")
@@ -124,10 +129,15 @@ def main() -> None:
             resume_download=True,
         )
         stage_files(HF_SNAPSHOT)
-        print("[stage] Weights and metadata staged under llm_raw/olmo_2")
+        print(f"[stage] Weights and metadata staged under {WEIGHTS_DIR.parent}")
 
     env = dict(os.environ)
-    env.setdefault("PYTHONPATH", str(ROOT))
+    pythonpath_entries = [str(ROOT), str(SRC_DIR)]
+    existing = env.get("PYTHONPATH")
+    combined = pythonpath_entries + ([existing] if existing else [])
+    env["PYTHONPATH"] = os.pathsep.join(
+        [entry for entry in combined if entry]
+    )
 
     run(["python", "llm_setup/analysis/test_analysis.py"], env=env)
     run(["python", "llm_setup/analysis/get_tensor_shapes_form_safetensors.py"], env=env)

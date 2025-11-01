@@ -8,8 +8,8 @@
    decision matrix.
 
 2. **Stage raw model assets**  
-   `python scripts/download_olmo2_assets.py` mirrors weights, tokenizer files,
-   and metadata into `llm_raw/olmo_2/` and runs the validation suite. Both flows
+  `python scripts/download_weights.py --model-name olmo2` mirrors weights, tokenizer files,
+   and metadata into `weights/olmo2/` and runs the validation suite. Both flows
    reuse this cache.
 
 3. **Run the chosen flow**  

@@ -11,4 +11,4 @@ OLMo-2 inference:
   reference loader for staged snapshots.
 
 These scripts are treated as raw reference assets alongside the released model
-weights in `llm_raw/olmo_2/`.
+weights staged under `weights/olmo2/`.

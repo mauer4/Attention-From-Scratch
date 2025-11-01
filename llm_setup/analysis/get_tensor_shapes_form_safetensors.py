@@ -13,6 +13,15 @@ import struct
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from project_config import get_model_paths, load_config
+
 
 def read_header(path: Path) -> Dict[str, Dict[str, List[int]]]:
     """Return the safetensors header mapping tensor name -> metadata."""
@@ -24,10 +33,9 @@ def read_header(path: Path) -> Dict[str, Dict[str, List[int]]]:
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parents[2]
-    data_root = root / "llm_raw" / "olmo_2"
-    weights_dir = data_root / "raw_weights"
-    metadata_dir = data_root / "metadata"
+    model_paths = get_model_paths(load_config())
+    weights_dir = model_paths["weights"]
+    metadata_dir = model_paths["metadata"]
 
     index_path = metadata_dir / "model.safetensors.index.json"
     weight_map: Dict[str, str] = json.loads(index_path.read_text())["weight_map"]

@@ -12,8 +12,17 @@ import struct
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
 import torch
 from safetensors.torch import safe_open
+
+from project_config import get_model_paths, load_config
 
 
 DTYPE_MAP: Dict[str, torch.dtype] = {
@@ -124,10 +133,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    root = Path(__file__).resolve().parents[2]
-    data_root = root / "llm_raw" / "olmo_2"
-    weights_dir = data_root / "raw_weights"
-    metadata_dir = data_root / "metadata"
+    model_paths = get_model_paths(load_config())
+    weights_dir = model_paths["weights"]
+    metadata_dir = model_paths["metadata"]
 
     index = json.loads((metadata_dir / "model.safetensors.index.json").read_text())
     weight_map: Dict[str, str] = index["weight_map"]

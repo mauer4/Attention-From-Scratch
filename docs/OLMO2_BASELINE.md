@@ -16,7 +16,7 @@ SKIP_SYSTEM_PACKAGES=1 SKIP_CUDA_TOOLKIT=1 \
   bash setup/bootstrap_host.sh --python-env .venv-olmo2
 
 source .venv-olmo2/bin/activate
-python scripts/download_olmo2_assets.py
+python scripts/download_weights.py --model-name olmo2
 ```
 
 The bootstrap script installs from the locked dependency set (PyTorch, HF stack,

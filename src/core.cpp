@@ -1,4 +1,4 @@
-﻿#include "attention/core.hpp"
+#include "attention/core.hpp"
 
 namespace attention {
 

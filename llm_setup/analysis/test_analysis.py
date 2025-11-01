@@ -11,6 +11,13 @@ import sys
 from pathlib import Path
 from typing import Dict, Iterable
 
+ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from project_config import get_model_paths, load_config
+
 
 def require_paths(label: str, paths: Iterable[Path]) -> None:
     missing = [str(p) for p in paths if not p.exists()]
@@ -52,19 +59,18 @@ def check_inventory(metadata_dir: Path, expected_rows: int) -> None:
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parents[2]
-    data_root = root / "llm_raw" / "olmo_2"
-    raw_weights = data_root / "raw_weights"
-    metadata_dir = data_root / "metadata"
-    tokenizer_dir = data_root / "raw_tokenizer"
+    model_paths = get_model_paths(load_config())
+    weights_dir = model_paths["weights"]
+    metadata_dir = model_paths["metadata"]
+    tokenizer_dir = model_paths["tokenizer"]
 
     require_paths(
         "core directories",
-        [data_root, raw_weights, metadata_dir, tokenizer_dir],
+        [weights_dir, metadata_dir, tokenizer_dir],
     )
 
     weight_map = load_weight_index(metadata_dir)
-    shard_paths = [raw_weights / shard for shard in set(weight_map.values())]
+    shard_paths = [weights_dir / shard for shard in set(weight_map.values())]
     require_paths("weight shards", shard_paths)
 
     tokenizer_files = [
