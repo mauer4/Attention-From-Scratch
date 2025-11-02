@@ -20,7 +20,7 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from model_env import get_model_paths
+from model_env import get_model_root
 
 
 def read_header(path: Path) -> Dict[str, Dict[str, List[int]]]:
@@ -33,9 +33,9 @@ def read_header(path: Path) -> Dict[str, Dict[str, List[int]]]:
 
 
 def main() -> None:
-    model_paths = get_model_paths()
-    weights_dir = model_paths["weights"]
-    metadata_dir = model_paths["metadata"]
+    model_root = get_model_root()
+    weights_dir = model_root
+    metadata_dir = model_root
 
     index_path = metadata_dir / "model.safetensors.index.json"
     weight_map: Dict[str, str] = json.loads(index_path.read_text())["weight_map"]

@@ -22,7 +22,7 @@ if str(SRC_DIR) not in sys.path:
 import torch
 from safetensors.torch import safe_open
 
-from model_env import get_model_paths
+from model_env import get_model_root
 
 
 DTYPE_MAP: Dict[str, torch.dtype] = {
@@ -133,9 +133,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    model_paths = get_model_paths()
-    weights_dir = model_paths["weights"]
-    metadata_dir = model_paths["metadata"]
+    model_root = get_model_root()
+    weights_dir = model_root
+    metadata_dir = model_root
 
     index = json.loads((metadata_dir / "model.safetensors.index.json").read_text())
     weight_map: Dict[str, str] = index["weight_map"]

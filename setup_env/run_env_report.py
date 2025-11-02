@@ -18,7 +18,7 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from model_env import get_model_identifiers, get_model_paths
+from model_env import get_model_identifiers, get_model_root
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 MARKDOWN_PATH = REPORTS_DIR / "environment_report.md"
@@ -128,10 +128,10 @@ def main() -> int:
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
     model_name, _, _ = get_model_identifiers()
-    model_paths = get_model_paths()
-    weights_dir = model_paths["weights"]
-    tokenizer_dir = model_paths["tokenizer"]
-    metadata_dir = model_paths["metadata"]
+    model_root = get_model_root()
+    weights_dir = model_root
+    tokenizer_dir = model_root
+    metadata_dir = model_root
 
     warnings = list(dict.fromkeys(gpu_warnings + test_warnings))
 
@@ -171,29 +171,25 @@ def main() -> int:
     )
 
     asset_problems: List[str] = []
-    pairs = [
-        ("weights", weights_dir),
-        ("tokenizer", tokenizer_dir),
-        ("metadata", metadata_dir),
-    ]
-    for label, path in pairs:
-        if not path.exists():
-            asset_problems.append(f"{label}: missing directory {path}")
-        else:
-            if label == "weights":
-                has_shards = any(path.glob("model-*.safetensors"))
-                if not has_shards:
-                    asset_problems.append(f"{label}: no model-*.safetensors files in {path}")
-            if label == "tokenizer":
-                tokenizer_files = ["tokenizer.json", "tokenizer_config.json"]
-                missing = [name for name in tokenizer_files if not (path / name).exists()]
-                if missing:
-                    asset_problems.append(f"{label}: missing {', '.join(missing)} in {path}")
-            if label == "metadata":
-                metadata_files = ["config.json", "generation_config.json", "model.safetensors.index.json"]
-                missing = [name for name in metadata_files if not (path / name).exists()]
-                if missing:
-                    asset_problems.append(f"{label}: missing {', '.join(missing)} in {path}")
+    if not model_root.exists():
+        asset_problems.append(f"model assets: missing directory {model_root}")
+    else:
+        if not any(model_root.glob("model-*.safetensors")):
+            asset_problems.append(f"weights: no model-*.safetensors files in {model_root}")
+
+        tokenizer_files = ["tokenizer.json", "tokenizer_config.json"]
+        missing_tokenizer = [name for name in tokenizer_files if not (model_root / name).exists()]
+        if missing_tokenizer:
+            asset_problems.append(
+                f"tokenizer: missing {', '.join(missing_tokenizer)} in {model_root}"
+            )
+
+        metadata_files = ["config.json", "generation_config.json", "model.safetensors.index.json"]
+        missing_metadata = [name for name in metadata_files if not (model_root / name).exists()]
+        if missing_metadata:
+            asset_problems.append(
+                f"metadata: missing {', '.join(missing_metadata)} in {model_root}"
+            )
 
     if asset_problems:
         warnings.extend(asset_problems)

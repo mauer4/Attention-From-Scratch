@@ -23,8 +23,7 @@ from huggingface_hub import snapshot_download
 from model_env import (
     MODEL_SNAPSHOT_ENV,
     get_model_identifiers,
-    get_snapshot_dir,
-    load_model_config,
+    get_model_root,
 )
 
 REPORTS_DIR = ROOT / "reports"
@@ -185,11 +184,7 @@ def main() -> int:
     if args.weights_root:
         os.environ[MODEL_ENV_VAR] = args.weights_root
 
-    default_dest = get_snapshot_dir(
-        None,
-        model_name=model_name,
-        model_variant=repo_id,
-    )
+    default_dest = get_model_root(model_variant=repo_id)
 
     dest = resolve_destination(args.dest, default_dest)
 

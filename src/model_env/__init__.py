@@ -57,16 +57,14 @@ def get_model_identifiers() -> Tuple[str, str, str]:
     return model_name, model_variant, repo_id
 
 
-def compute_snapshot_dir(model_name: str, model_variant: str) -> Path:
-    base = ROOT / "weights" / model_name
+def compute_snapshot_dir(model_variant: str) -> Path:
     variant_path = Path(model_variant)
-    return base.joinpath(*variant_path.parts).expanduser().resolve()
+    return (ROOT / "weights").joinpath(*variant_path.parts).expanduser().resolve()
 
 
-def get_snapshot_dir(
+def get_model_root(
     override: str | os.PathLike[str] | None = None,
     *,
-    model_name: str | None = None,
     model_variant: str | None = None,
 ) -> Path:
     direct_override = _resolve_optional_path(override)
@@ -77,42 +75,10 @@ def get_snapshot_dir(
     if env_override is not None:
         return env_override
 
-    if model_name is None or model_variant is None:
-        model_name, model_variant, _ = get_model_identifiers()
+    if model_variant is None:
+        _, model_variant, _ = get_model_identifiers()
 
-    return compute_snapshot_dir(model_name, model_variant)
-
-
-def get_tokenizer_dir(snapshot_dir: Path | None = None) -> Path:
-    env_dir = _resolve_optional_path(os.environ.get(MODEL_TOKENIZER_ENV))
-    if env_dir is not None:
-        return env_dir
-    if snapshot_dir is None:
-        snapshot_dir = get_snapshot_dir()
-    return snapshot_dir
-
-
-def get_metadata_dir(snapshot_dir: Path | None = None) -> Path:
-    env_dir = _resolve_optional_path(os.environ.get(MODEL_CONFIG_ENV))
-    if env_dir is not None:
-        return env_dir
-    if snapshot_dir is None:
-        snapshot_dir = get_snapshot_dir()
-    metadata_dir = snapshot_dir / "metadata"
-    if metadata_dir.exists():
-        return metadata_dir
-    return snapshot_dir
-
-
-def get_model_paths() -> Dict[str, Path]:
-    snapshot_dir = get_snapshot_dir()
-    tokenizer_dir = get_tokenizer_dir(snapshot_dir)
-    metadata_dir = get_metadata_dir(snapshot_dir)
-    return {
-        "weights": snapshot_dir,
-        "tokenizer": tokenizer_dir,
-        "metadata": metadata_dir,
-    }
+    return compute_snapshot_dir(model_variant)
 
 
 def get_runtime_preferences() -> Dict[str, str]:
@@ -131,11 +97,8 @@ __all__ = [
     "MODEL_TOKENIZER_ENV",
     "MODEL_CONFIG_ENV",
     "compute_snapshot_dir",
-    "get_metadata_dir",
     "get_model_identifiers",
-    "get_model_paths",
+    "get_model_root",
     "get_runtime_preferences",
-    "get_snapshot_dir",
-    "get_tokenizer_dir",
     "load_model_config",
 ]

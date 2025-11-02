@@ -16,11 +16,11 @@ if str(SRC_DIR) not in sys.path:
 
 from huggingface_hub import snapshot_download
 
-from model_env import get_model_paths
-MODEL_PATHS = get_model_paths()
-WEIGHTS_DIR = MODEL_PATHS["weights"]
-TOKENIZER_DIR = MODEL_PATHS["tokenizer"]
-METADATA_DIR = MODEL_PATHS["metadata"]
+from model_env import get_model_root
+MODEL_ROOT = get_model_root()
+WEIGHTS_DIR = MODEL_ROOT
+TOKENIZER_DIR = MODEL_ROOT
+METADATA_DIR = MODEL_ROOT
 HF_SNAPSHOT = WEIGHTS_DIR / "_hf_snapshot"
 
 WEIGHT_SUFFIXES = {".safetensors"}

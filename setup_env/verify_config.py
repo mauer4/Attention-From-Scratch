@@ -16,7 +16,7 @@ if str(SRC_DIR) not in sys.path:
 
 from model_env import (
     get_model_identifiers,
-    get_model_paths,
+    get_model_root,
     get_runtime_preferences,
 )
 
@@ -33,36 +33,37 @@ REQUIRED_TOKENIZER = {
 }
 
 
-def check_paths(paths: Dict[str, Path]) -> Dict[str, Any]:
+def check_paths(root: Path) -> Dict[str, Any]:
+    exists = root.exists()
     result: Dict[str, Any] = {
-        "weights": {"path": str(paths["weights"]), "exists": paths["weights"].exists()},
-        "tokenizer": {"path": str(paths["tokenizer"]), "exists": paths["tokenizer"].exists()},
-        "metadata": {"path": str(paths["metadata"]), "exists": paths["metadata"].exists()},
+        "weights": {"path": str(root), "exists": exists},
+        "tokenizer": {"path": str(root), "exists": exists},
+        "metadata": {"path": str(root), "exists": exists},
         "missing_files": [],
     }
 
     missing: List[str] = []
 
-    if result["weights"]["exists"]:
-        shards = sorted(paths["weights"].glob("model-*.safetensors"))
+    if not exists:
+        missing.extend(
+            [
+                "weights directory",
+                "tokenizer directory",
+                "metadata directory",
+            ]
+        )
+    else:
+        shards = sorted(root.glob("model-*.safetensors"))
         if not shards:
             missing.append("safetensors shards in weights directory")
-    else:
-        missing.append("weights directory")
 
-    if result["tokenizer"]["exists"]:
         for name in REQUIRED_TOKENIZER:
-            if not (paths["tokenizer"] / name).exists():
+            if not (root / name).exists():
                 missing.append(f"tokenizer/{name}")
-    else:
-        missing.append("tokenizer directory")
 
-    if result["metadata"]["exists"]:
         for name in REQUIRED_METADATA:
-            if not (paths["metadata"] / name).exists():
+            if not (root / name).exists():
                 missing.append(f"metadata/{name}")
-    else:
-        missing.append("metadata directory")
 
     result["missing_files"] = missing
     result["status"] = "ok" if not missing else "warn"
@@ -73,8 +74,8 @@ def main() -> int:
     model_name, _, _ = get_model_identifiers()
     runtime = get_runtime_preferences()
 
-    paths = get_model_paths()
-    validation = check_paths(paths)
+    model_root = get_model_root()
+    validation = check_paths(model_root)
 
     report = {
         "model_name": model_name,
@@ -92,9 +93,9 @@ def main() -> int:
 
     print(f"Model: {model_name}")
     print(f"Device preference: {runtime.get('device', 'auto')} | dtype: {runtime.get('dtype', 'fp32')}")
-    print(f"Weights: {paths['weights']}")
-    print(f"Tokenizer: {paths['tokenizer']}")
-    print(f"Metadata: {paths['metadata']}")
+    print(f"Weights: {model_root}")
+    print(f"Tokenizer: {model_root}")
+    print(f"Metadata: {model_root}")
     print(f"Report saved to {REPORT_PATH.relative_to(ROOT)}")
 
     return 0 if validation["status"] == "ok" else 1

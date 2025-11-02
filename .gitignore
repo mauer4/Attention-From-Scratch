@@ -30,3 +30,4 @@ weights/llama3/model-*.safetensors
 weights/llama3/_hf_snapshot/
 weights/llama3/tokenizer/*
 !weights/llama3/tokenizer/README.md
+err

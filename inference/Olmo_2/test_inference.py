@@ -29,8 +29,7 @@ if str(SRC_DIR) not in sys.path:
 
 from model_env import (
     get_model_identifiers,
-    get_snapshot_dir,
-    get_tokenizer_dir,
+    get_model_root,
 )
 
 REPORTS_DIR = ROOT / "reports"
@@ -91,12 +90,8 @@ def main() -> int:
 
     model_name = os.environ.get("MODEL_NAME", default_model)
     preferred_device = os.environ.get("TORCH_DEVICE", "cuda")
-    weights_path = get_snapshot_dir(
-        None,
-        model_name=model_name,
-        model_variant=default_repo,
-    )
-    tokenizer_path = get_tokenizer_dir(weights_path)
+    weights_path = get_model_root(model_variant=default_repo)
+    tokenizer_path = weights_path
 
     status = "passed"
     warnings = []

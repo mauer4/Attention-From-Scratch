@@ -27,7 +27,7 @@ from model_env import (
     MODEL_SNAPSHOT_ENV,
     MODEL_TOKENIZER_ENV,
     get_model_identifiers,
-    get_snapshot_dir,
+    get_model_root,
 )
 
 try:
@@ -205,11 +205,7 @@ def main() -> None:
     if args.model_dir is not None:
         model_dir = args.model_dir.expanduser().resolve()
     else:
-        model_dir = get_snapshot_dir(
-            None,
-            model_name=args.model_name,
-            model_variant=DEFAULT_REPO_ID,
-        )
+        model_dir = get_model_root(model_variant=DEFAULT_REPO_ID)
 
     if not model_dir.exists():
         raise FileNotFoundError(f"Model directory not found: {model_dir}")

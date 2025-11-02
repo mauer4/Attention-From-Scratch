@@ -16,7 +16,7 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from model_env import get_model_paths
+from model_env import get_model_root
 
 
 def require_paths(label: str, paths: Iterable[Path]) -> None:
@@ -59,10 +59,10 @@ def check_inventory(metadata_dir: Path, expected_rows: int) -> None:
 
 
 def main() -> None:
-    model_paths = get_model_paths()
-    weights_dir = model_paths["weights"]
-    metadata_dir = model_paths["metadata"]
-    tokenizer_dir = model_paths["tokenizer"]
+    model_root = get_model_root()
+    weights_dir = model_root
+    metadata_dir = model_root
+    tokenizer_dir = model_root
 
     require_paths(
         "core directories",
