@@ -1,6 +1,0 @@
-model:
-  name: olmo2
-  weights_dir: weights/olmo2
-runtime:
-  device: cuda
-  dtype: float16
