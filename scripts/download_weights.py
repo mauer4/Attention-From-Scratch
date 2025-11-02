@@ -20,14 +20,17 @@ if str(SRC_DIR) not in sys.path:
 
 from huggingface_hub import snapshot_download
 
-from model_storage import MODEL_ENV_VAR, get_model_dir
+from model_env import (
+    MODEL_SNAPSHOT_ENV,
+    get_model_identifiers,
+    get_snapshot_dir,
+    load_model_config,
+)
 
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-MODEL_REGISTRY = {
-    "olmo2": "allenai/OLMo-2-1124-13B",
-}
+MODEL_ENV_VAR = MODEL_SNAPSHOT_ENV
 
 METADATA_FILES = {
     "config.json",
@@ -45,10 +48,13 @@ TOKENIZER_FILES = {
 }
 
 
-def resolve_destination(value: str | os.PathLike[str] | None, model_name: str) -> Path:
+def resolve_destination(
+    value: str | os.PathLike[str] | None,
+    default_path: Path,
+) -> Path:
     if value is None:
-        return get_model_dir(model_name)
-    path = Path(os.path.expanduser(str(value))).expanduser()
+        return default_path
+    path = Path(os.path.expanduser(str(value)))
     if not path.is_absolute():
         path = ROOT / path
     return path.resolve()
@@ -164,16 +170,28 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    env_model = os.environ.get("MODEL_NAME", "olmo2")
-    model_name = args.model_name or env_model
+    try:
+        default_model, _, default_repo = get_model_identifiers()
+    except (FileNotFoundError, ValueError) as error:
+        print(f"❌ {error}", file=sys.stderr)
+        return 1
+
+    model_name = args.model_name or default_model
+    repo_id = args.repo_id or default_repo
+    if repo_id is None:
+        print(f"❌ Unable to determine repository id for model '{model_name}'.", file=sys.stderr)
+        return 1
+
     if args.weights_root:
         os.environ[MODEL_ENV_VAR] = args.weights_root
 
-    dest = resolve_destination(args.dest, model_name)
-    repo_id = args.repo_id or MODEL_REGISTRY.get(model_name)
-    if repo_id is None:
-        print(f"❌ Unknown model '{model_name}'. Provide --repo-id.", file=sys.stderr)
-        return 1
+    default_dest = get_snapshot_dir(
+        None,
+        model_name=model_name,
+        model_variant=repo_id,
+    )
+
+    dest = resolve_destination(args.dest, default_dest)
 
     if assets_present(dest) and not args.revision:
         print("ℹ️  Assets already present; skipping download.")

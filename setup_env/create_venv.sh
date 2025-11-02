@@ -34,6 +34,24 @@ log() {
   printf "[create_venv] %s\n" "$*"
 }
 
+CONFIG_EXPORTER="${ROOT_DIR}/setup_env/export_model_env.py"
+PYTHON_BIN="python"
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+  else
+    echo "❌ python or python3 command is required." >&2
+    exit 1
+  fi
+fi
+if ! ENV_SETTINGS="$("${PYTHON_BIN}" "${CONFIG_EXPORTER}")"; then
+  echo "❌ Failed to load model configuration from config/config.yaml" >&2
+  exit 1
+fi
+eval "${ENV_SETTINGS}"
+log "Project root: ${PROJECT_ROOT}"
+log "Snapshot directory: ${MODEL_SNAPSHOT_DIR}"
+
 platform="$(detect_platform)"
 log "Detected host platform: ${platform}"
 

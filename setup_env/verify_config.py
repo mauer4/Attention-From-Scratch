@@ -14,7 +14,11 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from project_config import get_model_paths, load_config
+from model_env import (
+    get_model_identifiers,
+    get_model_paths,
+    get_runtime_preferences,
+)
 
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -66,11 +70,10 @@ def check_paths(paths: Dict[str, Path]) -> Dict[str, Any]:
 
 
 def main() -> int:
-    config = load_config()
-    model_name = config.get("model", {}).get("name", "unknown")
-    runtime = config.get("runtime", {})
+    model_name, _, _ = get_model_identifiers()
+    runtime = get_runtime_preferences()
 
-    paths = get_model_paths(config)
+    paths = get_model_paths()
     validation = check_paths(paths)
 
     report = {

@@ -18,7 +18,7 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from project_config import get_model_paths, load_config
+from model_env import get_model_identifiers, get_model_paths
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 MARKDOWN_PATH = REPORTS_DIR / "environment_report.md"
@@ -127,12 +127,11 @@ def main() -> int:
     pip_version = run(["pip", "--version"])
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S %Z")
 
-    config = load_config()
-    model_paths = get_model_paths(config)
+    model_name, _, _ = get_model_identifiers()
+    model_paths = get_model_paths()
     weights_dir = model_paths["weights"]
     tokenizer_dir = model_paths["tokenizer"]
     metadata_dir = model_paths["metadata"]
-    model_name = config.get("model", {}).get("name", "unknown")
 
     warnings = list(dict.fromkeys(gpu_warnings + test_warnings))
 

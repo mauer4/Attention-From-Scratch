@@ -20,7 +20,7 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from project_config import get_model_paths, load_config
+from model_env import get_model_paths
 
 
 def read_header(path: Path) -> Dict[str, Dict[str, List[int]]]:
@@ -33,7 +33,7 @@ def read_header(path: Path) -> Dict[str, Dict[str, List[int]]]:
 
 
 def main() -> None:
-    model_paths = get_model_paths(load_config())
+    model_paths = get_model_paths()
     weights_dir = model_paths["weights"]
     metadata_dir = model_paths["metadata"]
 

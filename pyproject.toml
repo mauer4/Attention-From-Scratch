@@ -45,13 +45,13 @@ olmo = [
  ]
 
 [tool.setuptools]
-packages = ["custom_engine", "inference", "analysis", "project_config"]
+packages = ["custom_engine", "inference", "analysis", "model_env"]
 
  [tool.setuptools.package-dir]
 custom_engine = "src/custom_engine"
 inference = "src/inference"
 analysis = "analysis"
-project_config = "src/project_config"
+model_env = "src/model_env"
 
  [tool.pytest.ini_options]
  pythonpath = ["."]

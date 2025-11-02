@@ -23,10 +23,20 @@ SRC_DIR = REPO_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from model_storage import get_model_dir
+from model_env import (
+    MODEL_SNAPSHOT_ENV,
+    MODEL_TOKENIZER_ENV,
+    get_model_identifiers,
+    get_snapshot_dir,
+)
 
-DEFAULT_MODEL_NAME = os.environ.get("MODEL_NAME", "olmo2")
-DEFAULT_MODEL_DIR = get_model_dir(DEFAULT_MODEL_NAME)
+try:
+    DEFAULT_MODEL_NAME, _, DEFAULT_REPO_ID = get_model_identifiers()
+except (FileNotFoundError, ValueError):
+    DEFAULT_MODEL_NAME = os.environ.get("MODEL_NAME", "olmo2")
+    default_variant = os.environ.get("MODEL_VARIANT", "allenai/OLMo-2-1124-13B")
+    DEFAULT_REPO_ID = os.environ.get("MODEL_REPO_ID", default_variant)
+
 DEFAULT_PROMPT = "Explain why attention mechanisms improved transformer models."
 DEFAULT_MAX_NEW_TOKENS = 128
 DEFAULT_TEMPERATURE = 0.8
@@ -44,13 +54,13 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help="Directory containing the HF-style config/tokenizer/weight shards. "
-        "Overrides --model-name/MODEL_WEIGHTS_ROOT when provided.",
+        f"Overrides --model-name/${MODEL_SNAPSHOT_ENV} when provided.",
     )
     parser.add_argument(
         "--tokenizer-dir",
         type=Path,
         default=None,
-        help="Directory containing tokenizer files (defaults to model-dir/tokenizer or model-dir).",
+        help=f"Directory containing tokenizer files (defaults to ${MODEL_TOKENIZER_ENV} or model-dir).",
     )
     parser.add_argument(
         "--prompt",
@@ -167,6 +177,12 @@ def determine_tokenizer_dir(model_dir: Path, override: Path | None) -> Path:
         if not override.exists():
             raise FileNotFoundError(f"Tokenizer directory not found: {override}")
         return override
+    env_value = os.environ.get(MODEL_TOKENIZER_ENV)
+    if env_value:
+        env_path = Path(env_value).expanduser().resolve()
+        if not env_path.exists():
+            raise FileNotFoundError(f"Tokenizer directory not found: {env_path}")
+        return env_path
     candidate = model_dir / "tokenizer"
     if candidate.exists():
         return candidate
@@ -189,7 +205,11 @@ def main() -> None:
     if args.model_dir is not None:
         model_dir = args.model_dir.expanduser().resolve()
     else:
-        model_dir = get_model_dir(args.model_name).expanduser().resolve()
+        model_dir = get_snapshot_dir(
+            None,
+            model_name=args.model_name,
+            model_variant=DEFAULT_REPO_ID,
+        )
 
     if not model_dir.exists():
         raise FileNotFoundError(f"Model directory not found: {model_dir}")

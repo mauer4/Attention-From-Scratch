@@ -80,7 +80,7 @@ for module in (
     "inference.engine",
     "custom_engine.core",
     "analysis.benchmark_runtime",
-    "project_config",
+    "model_env",
 ):
     try:
         __import__(module)

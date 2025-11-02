@@ -20,7 +20,7 @@ if str(SRC_DIR) not in sys.path:
 
 import torch
 
-from project_config import get_model_paths, load_config
+from model_env import get_model_paths
 
 
 DTYPE_MAP: Dict[str, torch.dtype] = {
@@ -85,7 +85,7 @@ def main() -> None:
     parser.add_argument("--to-float32", action="store_true", help="Convert tensor to float32 before saving.")
     args = parser.parse_args()
 
-    default_weights_dir = get_model_paths(load_config())["weights"]
+    default_weights_dir = get_model_paths()["weights"]
     shard_path = args.file
     if not shard_path.is_absolute():
         candidate = default_weights_dir / shard_path

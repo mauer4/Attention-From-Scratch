@@ -27,7 +27,11 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from model_storage import get_model_dir
+from model_env import (
+    get_model_identifiers,
+    get_snapshot_dir,
+    get_tokenizer_dir,
+)
 
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -78,10 +82,21 @@ def run_inference(weights: Path, tokenizer_dir: Path, device: torch.device) -> D
 
 
 def main() -> int:
-    model_name = os.environ.get("MODEL_NAME", "olmo2")
+    try:
+        default_model, _, default_repo = get_model_identifiers()
+    except (FileNotFoundError, ValueError):
+        default_model = os.environ.get("MODEL_NAME", "olmo2")
+        default_variant = os.environ.get("MODEL_VARIANT", "allenai/OLMo-2-1124-13B")
+        default_repo = os.environ.get("MODEL_REPO_ID", default_variant)
+
+    model_name = os.environ.get("MODEL_NAME", default_model)
     preferred_device = os.environ.get("TORCH_DEVICE", "cuda")
-    weights_path = get_model_dir(model_name)
-    tokenizer_path = weights_path
+    weights_path = get_snapshot_dir(
+        None,
+        model_name=model_name,
+        model_variant=default_repo,
+    )
+    tokenizer_path = get_tokenizer_dir(weights_path)
 
     status = "passed"
     warnings = []

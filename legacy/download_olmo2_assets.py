@@ -16,8 +16,8 @@ if str(SRC_DIR) not in sys.path:
 
 from huggingface_hub import snapshot_download
 
-from project_config import get_model_paths, load_config
-MODEL_PATHS = get_model_paths(load_config())
+from model_env import get_model_paths
+MODEL_PATHS = get_model_paths()
 WEIGHTS_DIR = MODEL_PATHS["weights"]
 TOKENIZER_DIR = MODEL_PATHS["tokenizer"]
 METADATA_DIR = MODEL_PATHS["metadata"]

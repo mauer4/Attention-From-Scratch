@@ -12,6 +12,25 @@ step() {
 
 overall_status=0
 
+step "⚙️  Step 0: Load model configuration"
+CONFIG_EXPORTER="${ROOT_DIR}/setup_env/export_model_env.py"
+PYTHON_BIN="python"
+if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+  else
+    echo "❌ python or python3 command is required." >&2
+    exit 1
+  fi
+fi
+if ! ENV_SETTINGS="$("${PYTHON_BIN}" "${CONFIG_EXPORTER}")"; then
+  echo "❌ Failed to load model configuration from config/config.yaml" >&2
+  exit 1
+fi
+eval "${ENV_SETTINGS}"
+echo "✅ Model configuration: ${MODEL_NAME} → ${MODEL_REPO_ID}"
+echo "✅ Snapshot directory: ${MODEL_SNAPSHOT_DIR}"
+
 step "⚙️  Step 1: GPU and driver probe"
 python "${ROOT_DIR}/setup_env/check_gpu.py"
 if [[ -f "${ROOT_DIR}/.env.autodetected" ]]; then
