@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Download model weights and stage them under weights/<model>."""
+"""Download model weights and stage them under weights/olmo2/<model>/."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -19,7 +20,7 @@ if str(SRC_DIR) not in sys.path:
 
 from huggingface_hub import snapshot_download
 
-from project_config import get_model_paths, load_config, resolve_path
+from model_storage import MODEL_ENV_VAR, get_model_dir
 
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -42,6 +43,15 @@ TOKENIZER_FILES = {
     "merges.txt",
     "vocab.json",
 }
+
+
+def resolve_destination(value: str | os.PathLike[str] | None, model_name: str) -> Path:
+    if value is None:
+        return get_model_dir(model_name)
+    path = Path(os.path.expanduser(str(value))).expanduser()
+    if not path.is_absolute():
+        path = ROOT / path
+    return path.resolve()
 
 
 def sha256sum(path: Path) -> str:
@@ -88,23 +98,6 @@ def stage_model(model_name: str, repo_id: str, dest: Path, revision: str | None 
         shutil.rmtree(cache_dir, ignore_errors=True)
 
 
-def restructure_snapshot(root: Path) -> None:
-    metadata_dir = root / "metadata"
-    tokenizer_dir = root / "tokenizer"
-    metadata_dir.mkdir(parents=True, exist_ok=True)
-    tokenizer_dir.mkdir(parents=True, exist_ok=True)
-
-    for name in METADATA_FILES:
-        src = root / name
-        if src.exists():
-            src.replace(metadata_dir / name)
-
-    for name in TOKENIZER_FILES:
-        src = root / name
-        if src.exists():
-            src.replace(tokenizer_dir / name)
-
-
 def compute_file_hashes(root: Path) -> Dict[str, str]:
     file_hashes: Dict[str, str] = {}
     for file_path in root.rglob("*"):
@@ -121,15 +114,9 @@ def assets_present(root: Path) -> bool:
     if not shards:
         return False
 
-    metadata_dir = root / "metadata"
-    tokenizer_dir = root / "tokenizer"
-    if not metadata_dir.exists() or not tokenizer_dir.exists():
-        return False
-
-    if any((metadata_dir / name).exists() is False for name in METADATA_FILES):
-        return False
-    if any((tokenizer_dir / name).exists() is False for name in TOKENIZER_FILES):
-        return False
+    for name in METADATA_FILES | TOKENIZER_FILES:
+        if not (root / name).exists():
+            return False
     return True
 
 
@@ -155,21 +142,34 @@ def write_manifest(model_name: str, dest: Path, file_hashes: Dict[str, str]) -> 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Download and stage model weights.")
-    parser.add_argument("--model-name", default=None, help="Logical model name (defaults to config model).")
+    parser.add_argument(
+        "--model-name",
+        default=None,
+        help="Logical model name (defaults to MODEL_NAME env or 'olmo2').",
+    )
     parser.add_argument("--repo-id", default=None, help="Override Hugging Face repo id.")
-    parser.add_argument("--dest", default=None, help="Override destination directory.")
+    parser.add_argument(
+        "--dest",
+        default=None,
+        help="Override destination directory (relative paths resolve from repo root).",
+    )
     parser.add_argument("--revision", default=None, help="Optional repo revision or commit.")
+    parser.add_argument(
+        "--weights-root",
+        default=None,
+        help=f"Override {MODEL_ENV_VAR} for this invocation (implies dest=model root).",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    config = load_config()
-    default_model = config.get("model", {}).get("name", "olmo2")
-    model_name = args.model_name or default_model
-    paths = get_model_paths(config)
+    env_model = os.environ.get("MODEL_NAME", "olmo2")
+    model_name = args.model_name or env_model
+    if args.weights_root:
+        os.environ[MODEL_ENV_VAR] = args.weights_root
 
-    dest = resolve_path(args.dest) if args.dest else paths["weights"]
+    dest = resolve_destination(args.dest, model_name)
     repo_id = args.repo_id or MODEL_REGISTRY.get(model_name)
     if repo_id is None:
         print(f"❌ Unknown model '{model_name}'. Provide --repo-id.", file=sys.stderr)
@@ -184,7 +184,6 @@ def main() -> int:
 
     print(f"⚙️  Downloading {model_name} from {repo_id}")
     stage_model(model_name, repo_id, dest, args.revision)
-    restructure_snapshot(dest)
     cleanup_temp_dirs(dest)
 
     file_hashes = compute_file_hashes(dest)

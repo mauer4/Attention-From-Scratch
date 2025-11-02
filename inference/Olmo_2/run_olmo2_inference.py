@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -17,8 +18,15 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers.utils import logging as hf_logging
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_MODEL_DIR = PROJECT_ROOT / "weights" / "olmo2"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_DIR = REPO_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from model_storage import get_model_dir
+
+DEFAULT_MODEL_NAME = os.environ.get("MODEL_NAME", "olmo2")
+DEFAULT_MODEL_DIR = get_model_dir(DEFAULT_MODEL_NAME)
 DEFAULT_PROMPT = "Explain why attention mechanisms improved transformer models."
 DEFAULT_MAX_NEW_TOKENS = 128
 DEFAULT_TEMPERATURE = 0.8
@@ -27,10 +35,16 @@ DEFAULT_TEMPERATURE = 0.8
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run local OLMo-2 inference (HF-format checkpoint).")
     parser.add_argument(
+        "--model-name",
+        default=DEFAULT_MODEL_NAME,
+        help="Model nickname used when staging weights (defaults to MODEL_NAME env or 'olmo2').",
+    )
+    parser.add_argument(
         "--model-dir",
         type=Path,
-        default=DEFAULT_MODEL_DIR,
-        help="Directory containing the HF-style config/tokenizer/weight shards.",
+        default=None,
+        help="Directory containing the HF-style config/tokenizer/weight shards. "
+        "Overrides --model-name/MODEL_WEIGHTS_ROOT when provided.",
     )
     parser.add_argument(
         "--tokenizer-dir",
@@ -172,7 +186,11 @@ def main() -> None:
     args = parse_args()
     hf_logging.set_verbosity_error()
 
-    model_dir = args.model_dir.expanduser().resolve()
+    if args.model_dir is not None:
+        model_dir = args.model_dir.expanduser().resolve()
+    else:
+        model_dir = get_model_dir(args.model_name).expanduser().resolve()
+
     if not model_dir.exists():
         raise FileNotFoundError(f"Model directory not found: {model_dir}")
 

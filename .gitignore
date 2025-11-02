@@ -25,10 +25,7 @@ llm_raw/olmo_2/hf_snapshot/
 inference/Olmo_2/logs/
 inference/From_Scratch/logs/
 model-*-of-*.safetensors
-weights/olmo2/model-*.safetensors
-weights/olmo2/_hf_snapshot/
-weights/olmo2/tokenizer/*
-!weights/olmo2/tokenizer/README.md
+weights/olmo2/**
 weights/llama3/model-*.safetensors
 weights/llama3/_hf_snapshot/
 weights/llama3/tokenizer/*

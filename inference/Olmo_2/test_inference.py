@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -21,12 +22,12 @@ except ModuleNotFoundError as exc:  # pragma: no cover
     print("❌ transformers is not installed. Run setup_env/install_deps.sh first.")
     raise SystemExit(1) from exc
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from project_config import get_model_paths, get_runtime_preferences, load_config
+from model_storage import get_model_dir
 
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -34,11 +35,13 @@ JSON_PATH = REPORTS_DIR / "test_summary.json"
 MARKDOWN_PATH = REPORTS_DIR / "test_summary.md"
 
 
-def pick_device(runtime: Dict[str, Any]) -> torch.device:
-    preferred = runtime.get("device", "cuda")
-    if preferred == "cuda" and torch.cuda.is_available():
+def pick_device(preference: str) -> torch.device:
+    normalized = preference.lower()
+    if normalized == "cpu":
+        return torch.device("cpu")
+    if normalized == "cuda" and torch.cuda.is_available():
         return torch.device("cuda")
-    if preferred == "cpu":
+    if normalized == "cuda":
         return torch.device("cpu")
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -75,51 +78,80 @@ def run_inference(weights: Path, tokenizer_dir: Path, device: torch.device) -> D
 
 
 def main() -> int:
-    config = load_config()
-    runtime = get_runtime_preferences(config)
-    paths = get_model_paths(config)
+    model_name = os.environ.get("MODEL_NAME", "olmo2")
+    preferred_device = os.environ.get("TORCH_DEVICE", "cuda")
+    weights_path = get_model_dir(model_name)
+    tokenizer_path = weights_path
 
     status = "passed"
     warnings = []
     results: Dict[str, Any] = {}
 
-    missing = [
+    missing_dirs = [
         label
         for label, path in (
-            ("weights", paths["weights"]),
-            ("tokenizer", paths["tokenizer"]),
-            ("metadata", paths["metadata"]),
+            ("weights", weights_path),
+            ("tokenizer", tokenizer_path),
         )
         if not path.exists()
     ]
-    if missing:
+    if missing_dirs:
         status = "failed"
-        warnings.append(f"Missing required asset directories: {', '.join(missing)}")
+        warnings.append(f"Missing required asset directories: {', '.join(missing_dirs)}")
     else:
-        try:
-            device = pick_device(runtime)
-            if device.type == "cuda" and not torch.cuda.is_available():
-                warnings.append("CUDA requested but not available; falling back to CPU")
-                device = torch.device("cpu")
-            if device.type == "cuda":
-                torch.cuda.reset_peak_memory_stats(device)
-            results = run_inference(paths["weights"], paths["tokenizer"], device)
-            if device.type == "cpu":
-                warnings.append("Inference executed on CPU; enable CUDA for full validation")
-        except Exception as exc:  # noqa: BLE001
+        missing_assets = []
+        required_snapshot_files = [
+            "config.json",
+            "generation_config.json",
+            "model.safetensors.index.json",
+        ]
+        for name in required_snapshot_files:
+            if not (weights_path / name).exists():
+                missing_assets.append(name)
+
+        if not list(weights_path.glob("model-*.safetensors")):
+            missing_assets.append("model-*.safetensors")
+
+        required_tokenizer_files = [
+            "tokenizer.json",
+            "tokenizer_config.json",
+            "special_tokens_map.json",
+        ]
+        for name in required_tokenizer_files:
+            if not (tokenizer_path / name).exists():
+                missing_assets.append(f"tokenizer:{name}")
+
+        if missing_assets:
             status = "failed"
-            message = str(exc)
-            if "tokenizer" in message and "config.json" in message:
-                warnings.append(
-                    "Inference failed: tokenizer assets appear incomplete. "
-                    "Run 'python scripts/download_weights.py --model-name olmo2' to restage files."
-                )
-            else:
-                warnings.append(f"Inference failed: {exc}")
+            warnings.append(
+                "Missing expected snapshot assets: "
+                + ", ".join(sorted(missing_assets))
+            )
+        else:
+            try:
+                device = pick_device(preferred_device)
+                if device.type == "cuda" and not torch.cuda.is_available():
+                    warnings.append("CUDA requested but not available; falling back to CPU")
+                    device = torch.device("cpu")
+                if device.type == "cuda":
+                    torch.cuda.reset_peak_memory_stats(device)
+                results = run_inference(weights_path, tokenizer_path, device)
+                if device.type == "cpu":
+                    warnings.append("Inference executed on CPU; enable CUDA for full validation")
+            except Exception as exc:  # noqa: BLE001
+                status = "failed"
+                message = str(exc)
+                if "tokenizer" in message and "config.json" in message:
+                    warnings.append(
+                        "Inference failed: tokenizer assets appear incomplete. "
+                        "Run 'python scripts/download_weights.py --model-name olmo2' to restage files."
+                    )
+                else:
+                    warnings.append(f"Inference failed: {exc}")
 
     summary = {
         "status": status,
-        "model": config.get("model", {}).get("name", "unknown"),
+        "model": model_name,
         "results": results,
         "warnings": warnings,
     }

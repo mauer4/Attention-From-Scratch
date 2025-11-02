@@ -1,8 +1,6 @@
 model:
   name: olmo2
   weights_dir: weights/olmo2
-  tokenizer_dir: weights/olmo2/tokenizer
-  metadata_dir: weights/olmo2/metadata
 runtime:
   device: cuda
   dtype: float16
