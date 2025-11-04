@@ -75,7 +75,7 @@ else
 
 ⚠️  Setup finished with warnings
 • Review reports/config_report.json and reports/test_summary.json for details.
-• Run 'python scripts/download_weights.py --model-name olmo2' to stage assets if needed.
+• Run 'python scripts/utils/download_weights.py --model-name olmo2' to stage assets if needed.
 • Environment report (reports/environment_report.md) captures the warnings above.
 SUMMARY
   exit 1

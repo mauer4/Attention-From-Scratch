@@ -46,8 +46,15 @@ def main() -> int:
         print(f"Config {CONFIG_PATH} missing keys: {', '.join(missing)}", file=sys.stderr)
         return 1
 
-    weights_root = Path(ROOT_DIR / "weights" / model_name)
-    snapshot_dir = weights_root.joinpath(*Path(model_variant).parts)
+    weights_root = ROOT_DIR / "weights"
+    variant_path = Path(model_variant)
+    legacy_snapshot_dir = weights_root / model_name / variant_path
+    direct_snapshot_dir = weights_root.joinpath(*variant_path.parts)
+
+    if legacy_snapshot_dir.exists():
+        snapshot_dir = legacy_snapshot_dir
+    else:
+        snapshot_dir = direct_snapshot_dir
 
     exports = {
         "PROJECT_ROOT": normalize_path(str(ROOT_DIR)),

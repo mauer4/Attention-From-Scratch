@@ -68,17 +68,33 @@ def get_model_root(
     model_variant: str | None = None,
 ) -> Path:
     direct_override = _resolve_optional_path(override)
-    if direct_override is not None:
+    if direct_override is not None and direct_override.exists():
         return direct_override
 
-    env_override = _resolve_optional_path(os.environ.get(MODEL_SNAPSHOT_ENV))
-    if env_override is not None:
+    env_override_value = os.environ.get(MODEL_SNAPSHOT_ENV)
+    env_override = _resolve_optional_path(env_override_value)
+    if env_override is not None and env_override.exists():
         return env_override
 
     if model_variant is None:
-        _, model_variant, _ = get_model_identifiers()
+        model_name, model_variant, _ = get_model_identifiers()
+    else:
+        model_name, _, _ = get_model_identifiers()
 
-    return compute_snapshot_dir(model_variant)
+    primary_snapshot = compute_snapshot_dir(model_variant)
+    if primary_snapshot.exists():
+        return primary_snapshot
+
+    legacy_snapshot = (ROOT / "weights" / model_name).joinpath(*Path(model_variant).parts)
+    if legacy_snapshot.exists():
+        return legacy_snapshot
+
+    # Fall back to whichever override was provided, even if missing, so callers can surface helpful errors.
+    if env_override is not None:
+        return env_override
+    if direct_override is not None:
+        return direct_override
+    return primary_snapshot
 
 
 def get_runtime_preferences() -> Dict[str, str]:
