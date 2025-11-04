@@ -19,23 +19,26 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 REPORT_PATH = REPORTS_DIR / "system_gpu.json"
-AUTODETECTED_ENV = ROOT / ".env.autodetected"
+AUTODETECTED_ENV = ROOT / "config/config.yaml"
 
 
 def run_command(cmd: list[str]) -> tuple[int, str, str]:
     """Run a shell command and return (returncode, stdout, stderr)."""
-    proc = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-        text=True,
-    )
-    return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+    try:
+        proc = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            text=True,
+        )
+        return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+    except FileNotFoundError:
+        return 127, "", f"Command not found: {cmd[0]}"
 
 
 def parse_nvidia_smi_summary(output: str) -> Tuple[Optional[str], Optional[str]]:
@@ -241,10 +244,20 @@ def build_report() -> Dict[str, Any]:
 
 
 def emit_report(report: Dict[str, Any]) -> None:
+    import yaml
     REPORT_PATH.write_text(json.dumps(report, indent=2))
 
     cuda_version = report.get("detected_cuda_version") or ""
-    AUTODETECTED_ENV.write_text(f"CUDA_VERSION={cuda_version}\n", encoding="utf-8")
+
+    config = {}
+    if AUTODETECTED_ENV.exists():
+        with open(AUTODETECTED_ENV, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f) or {}
+
+    config["detected_cuda_version"] = cuda_version
+
+    with open(AUTODETECTED_ENV, "w", encoding="utf-8") as f:
+        yaml.dump(config, f, default_flow_style=False)
 
     details = report.get("gpu", {}).get("details", [])
     if details:

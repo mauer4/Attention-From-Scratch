@@ -1,2 +1,3 @@
+detected_cuda_version: ''
 model: olmo2
 model_variant: allenai/OLMo-2-1124-13B

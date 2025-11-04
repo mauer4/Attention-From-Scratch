@@ -26,22 +26,13 @@ ENV VIRTUAL_ENV=/opt/venv \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-RUN mkdir -p setup requirements/locks
+RUN python3 -m venv $VIRTUAL_ENV
 
 WORKDIR /workspace
 
-COPY setup/bootstrap_host.sh setup/bootstrap_host.sh
-COPY pyproject.toml pyproject.toml
-COPY requirements/locks/olmo.lock requirements/locks/olmo.lock
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN chmod +x setup/bootstrap_host.sh && \
-    bash setup/bootstrap_host.sh \
-      --system none \
-      --python-env "${VIRTUAL_ENV}" \
-      --cuda-toolkit none \
-      --extras olmo \
-      --lock requirements/locks/olmo.lock
-
-COPY . /workspace
+COPY . .
 
 CMD ["/bin/bash"]

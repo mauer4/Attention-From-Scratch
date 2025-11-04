@@ -1,0 +1,8 @@
+
+⚙️  Step 1: Prepare virtual environment
+[create_venv] Detected host platform: linux
+✅ Virtual environment found at /app/.venv
+[create_venv] Virtual environment created at /app/.venv
+✅ To activate, run: source /app/.venv/bin/activate
+
+⚙️  Step 2: Install Python dependencies

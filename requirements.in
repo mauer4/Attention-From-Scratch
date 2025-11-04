@@ -1,0 +1,15 @@
+torch
+transformers
+safetensors
+pyyaml
+python-dotenv
+pipdeptree
+markdown
+huggingface-hub
+tokenizers
+httpx
+accelerate
+rich
+typer-slim
+ai2-olmo-core
+datasets
