@@ -13,7 +13,7 @@ step() {
 overall_status=0
 
 step "⚙️  Step 0: Load model configuration"
-CONFIG_EXPORTER="${ROOT_DIR}/setup_env/export_model_env.py"
+CONFIG_EXPORTER="${ROOT_DIR}/scripts/setup/export_model_env.py"
 PYTHON_BIN="python"
 if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
   if command -v python3 >/dev/null 2>&1; then
@@ -32,35 +32,28 @@ echo "✅ Model configuration: ${MODEL_NAME} → ${MODEL_REPO_ID}"
 echo "✅ Snapshot directory: ${MODEL_SNAPSHOT_DIR}"
 
 step "⚙️  Step 1: GPU and driver probe"
-python "${ROOT_DIR}/setup_env/check_gpu.py"
-if [[ -f "${ROOT_DIR}/.env.autodetected" ]]; then
-  CUDA_VERSION_VALUE="$(grep '^CUDA_VERSION=' "${ROOT_DIR}/.env.autodetected" | cut -d'=' -f2)"
-  if [[ -n "${CUDA_VERSION_VALUE}" ]]; then
-    export CUDA_VERSION="${CUDA_VERSION_VALUE}"
-    echo "✅ Loaded CUDA version ${CUDA_VERSION_VALUE} from .env.autodetected"
-  fi
-fi
+python "${ROOT_DIR}/scripts/setup/check_gpu.py"
 
 step "⚙️  Step 2: Prepare virtual environment"
-source "${ROOT_DIR}/setup_env/create_venv.sh"
+source "${ROOT_DIR}/scripts/setup/create_venv.sh"
 
 step "⚙️  Step 3: Clone AllenAI OLMo repository"
-bash "${ROOT_DIR}/scripts/fetch_olmo2_repo.sh" "${ROOT_DIR}/.venv"
+bash "${ROOT_DIR}/scripts/setup/fetch_olmo2_repo.sh" "${ROOT_DIR}/.venv"
 
 step "⚙️  Step 4: Install Python dependencies"
-bash "${ROOT_DIR}/setup_env/install_deps.sh"
+bash "${ROOT_DIR}/scripts/setup/install_deps.sh"
 
 step "⚙️  Step 5: Validate configuration"
-if python "${ROOT_DIR}/setup_env/verify_config.py"; then
+if python "${ROOT_DIR}/scripts/setup/verify_config.py"; then
   echo "✅ Configuration validated"
 else
   echo "⚠️  Configuration has warnings (see reports/config_report.json)"
-  echo "   → Run 'python scripts/download_weights.py --model-name olmo2' if assets are missing."
+  echo "   → Run 'python scripts/utils/download_weights.py --model-name olmo2' if assets are missing."
   overall_status=1
 fi
 
 step "⚙️  Step 6: Run sanity inference"
-if python "${ROOT_DIR}/scripts/test_inference.py"; then
+if python "${ROOT_DIR}/scripts/inference/test_inference.py"; then
   echo "✅ Sanity inference executed"
 else
   echo "⚠️  Sanity inference recorded issues (see reports/test_summary.json)"
@@ -68,15 +61,15 @@ else
 fi
 
 step "⚙️  Step 7: Generate environment report"
-python "${ROOT_DIR}/setup_env/run_env_report.py"
+python "${ROOT_DIR}/scripts/setup/run_env_report.py"
 
 if [[ "${overall_status}" -eq 0 ]]; then
   cat <<SUMMARY
 
 ✔ GPU probe complete (reports/system_gpu.json)
 ✔ .venv ready at .venv/
-✔ Dependencies installed & requirements.lock refreshed
-✔ CUDA version recorded in .env.autodetected
+✔ Dependencies installed & requirements.txt refreshed
+✔ CUDA version recorded in config/config.yaml
 ✔ Sanity summary written to reports/test_summary.json
 ✔ Environment report at reports/environment_report.md
 → Ready for inference and benchmarking

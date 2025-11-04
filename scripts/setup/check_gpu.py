@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 REPORT_PATH = REPORTS_DIR / "system_gpu.json"
-AUTODETECTED_ENV = ROOT / ".env.autodetected"
+AUTODETECTED_ENV = ROOT / "config/config.yaml"
 
 
 def run_command(cmd: list[str]) -> tuple[int, str, str]:
@@ -241,10 +241,20 @@ def build_report() -> Dict[str, Any]:
 
 
 def emit_report(report: Dict[str, Any]) -> None:
+    import yaml
     REPORT_PATH.write_text(json.dumps(report, indent=2))
 
     cuda_version = report.get("detected_cuda_version") or ""
-    AUTODETECTED_ENV.write_text(f"CUDA_VERSION={cuda_version}\n", encoding="utf-8")
+
+    config = {}
+    if AUTODETECTED_ENV.exists():
+        with open(AUTODETECTED_ENV, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f) or {}
+
+    config["detected_cuda_version"] = cuda_version
+
+    with open(AUTODETECTED_ENV, "w", encoding="utf-8") as f:
+        yaml.dump(config, f, default_flow_style=False)
 
     details = report.get("gpu", {}).get("details", [])
     if details:

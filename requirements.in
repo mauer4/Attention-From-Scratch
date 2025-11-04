@@ -1,0 +1,16 @@
+torch==2.9.0
+transformers @ git+https://github.com/huggingface/transformers.git@a0bf5a82eebf88ee9f52145be427f6f1541329f6
+safetensors==0.4.3
+pyyaml==6.0.2
+python-dotenv==1.0.1
+pipdeptree==2.20.0
+markdown==3.6
+huggingface-hub==1.0.0rc6
+tokenizers==0.22.1
+httpx==0.28.1
+accelerate==1.11.0
+rich==13.7.1
+tqdm==4.66.4
+typer-slim==0.20.0
+ai2-olmo-core==2.3.0
+datasets==2.21.0
