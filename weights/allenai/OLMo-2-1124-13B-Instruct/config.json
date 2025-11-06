@@ -1,4 +1,5 @@
 {
+  "_name_or_path": "/weka/oe-adapt-default/costah/models/olmo2/1210_13b_gsm_beta_0.03_lr_3e-7_7470_checkpoints/step_180/",
   "architectures": [
     "Olmo2ForCausalLM"
   ],
@@ -19,8 +20,8 @@
   "rope_scaling": null,
   "rope_theta": 500000,
   "tie_word_embeddings": false,
-  "torch_dtype": "float32",
-  "transformers_version": "4.47.0",
-  "use_cache": true,
+  "torch_dtype": "bfloat16",
+  "transformers_version": "4.47.0.dev0",
+  "use_cache": false,
   "vocab_size": 100352
 }
