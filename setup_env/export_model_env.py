@@ -46,7 +46,7 @@ def main() -> int:
         print(f"Config {CONFIG_PATH} missing keys: {', '.join(missing)}", file=sys.stderr)
         return 1
 
-    weights_root = Path(ROOT_DIR / "weights" / model_name)
+    weights_root = Path(ROOT_DIR / "weights")
     snapshot_dir = weights_root.joinpath(*Path(model_variant).parts)
 
     exports = {

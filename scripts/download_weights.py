@@ -196,7 +196,10 @@ def main() -> int:
         return 0
 
     print(f"⚙️  Downloading {model_name} from {repo_id}")
+    # redefine at start
+    os.environ["HF_HUB_OFFLINE"] = "0"
     stage_model(model_name, repo_id, dest, args.revision)
+    os.environ["HF_HUB_OFFLINE"] = "1"
     cleanup_temp_dirs(dest)
 
     file_hashes = compute_file_hashes(dest)
