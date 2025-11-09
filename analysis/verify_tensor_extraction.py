@@ -115,6 +115,7 @@ def iter_tensor_names(weight_map: Dict[str, str], selected: Iterable[str]) -> Li
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Verify manual safetensor extraction against safe_open.")
+    parser.add_argument("snapshot_dir", type=str, help="Path to the Hugging Face snapshot directory")
     parser.add_argument(
         "--tensor-name",
         action="append",
@@ -133,9 +134,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    model_root = get_model_root()
-    weights_dir = model_root
-    metadata_dir = model_root
+    model_root = Path(args.snapshot_dir)
+    weights_dir = Path(args.snapshot_dir)
+    metadata_dir = Path(args.snapshot_dir)
 
     index = json.loads((metadata_dir / "model.safetensors.index.json").read_text())
     weight_map: Dict[str, str] = index["weight_map"]

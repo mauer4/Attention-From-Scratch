@@ -18,8 +18,6 @@ SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
-from huggingface_hub import snapshot_download
-
 from model_env import (
     MODEL_SNAPSHOT_ENV,
     get_model_identifiers,
@@ -68,6 +66,8 @@ def sha256sum(path: Path) -> str:
 
 
 def stage_model(model_name: str, repo_id: str, dest: Path, revision: str | None = None) -> None:
+    os.environ["HF_HUB_OFFLINE"] = "0"
+    from huggingface_hub import snapshot_download
     dest.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
@@ -101,6 +101,8 @@ def stage_model(model_name: str, repo_id: str, dest: Path, revision: str | None 
     cache_dir = dest / ".cache"
     if cache_dir.exists():
         shutil.rmtree(cache_dir, ignore_errors=True)
+
+    os.environ["HF_HUB_OFFLINE"] = "1"
 
 
 def compute_file_hashes(root: Path) -> Dict[str, str]:
@@ -197,9 +199,7 @@ def main() -> int:
 
     print(f"⚙️  Downloading {model_name} from {repo_id}")
     # redefine at start
-    os.environ["HF_HUB_OFFLINE"] = "0"
     stage_model(model_name, repo_id, dest, args.revision)
-    os.environ["HF_HUB_OFFLINE"] = "1"
     cleanup_temp_dirs(dest)
 
     file_hashes = compute_file_hashes(dest)

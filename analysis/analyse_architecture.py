@@ -291,7 +291,7 @@ def print_layer_graph(metadata: Metadata):
 
 def main():
     parser = argparse.ArgumentParser(description="Print OLMo 2 architecture information from a HF snapshot.")
-    parser.add_argument("input", type=str, help="Path to the Hugging Face snapshot directory")
+    parser.add_argument("snapshot_dir", type=str, help="Path to the Hugging Face snapshot directory")
     parser.add_argument(
         "--format",
         choices=["table", "graph", "both"],
@@ -305,9 +305,9 @@ def main():
     )
     args = parser.parse_args()
 
-    config_path = os.path.join(args.input, "config.json")
+    config_path = os.path.join(args.snapshot_dir, "config.json")
     if not os.path.exists(config_path):
-        parser.error(f"config.json not found in {args.input}")
+        parser.error(f"config.json not found in {args.snapshot_dir}")
 
     with open(config_path, "r") as f:
         config = json.load(f)
