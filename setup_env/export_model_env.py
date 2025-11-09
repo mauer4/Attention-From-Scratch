@@ -58,6 +58,7 @@ def main() -> int:
         "MODEL_TOKENIZER_DIR": normalize_path(snapshot_dir),
         "MODEL_CONFIG_DIR": normalize_path(snapshot_dir),
         "MODEL_WEIGHTS_ROOT": normalize_path(snapshot_dir),
+        "HF_HUB_OFFLINE": 1,
     }
 
     for key, value in exports.items():

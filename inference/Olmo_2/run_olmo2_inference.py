@@ -11,7 +11,10 @@ import json
 import os
 import sys
 import tempfile
+import time
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -20,6 +23,7 @@ from transformers.utils import logging as hf_logging
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = REPO_ROOT / "src"
+GPU_INFO_PATH = REPO_ROOT / "reports" / "system_gpu.json"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
@@ -85,6 +89,29 @@ def parse_args() -> argparse.Namespace:
         default="auto",
         help="Device preference (auto selects CUDA when available).",
     )
+    parser.add_argument(
+        "--no-print",
+        action="store_true",
+        help="Suppress all standard output (overrides --analyze JSON output).",
+    )
+    parser.add_argument(
+        "--analyze",
+        action="store_true",
+        help="Emit a JSON report capturing model metadata and performance metrics.",
+    )
+    parser.add_argument(
+        "--do-sample",
+        dest="do_sample",
+        action="store_true",
+        help="Enable sampling during generation (default).",
+    )
+    parser.add_argument(
+        "--no-do-sample",
+        dest="do_sample",
+        action="store_false",
+        help="Disable sampling during generation.",
+    )
+    parser.set_defaults(do_sample=True)
     return parser.parse_args()
 
 
@@ -198,14 +225,59 @@ def safe_decode(tokenizer: AutoTokenizer, token_ids: torch.Tensor) -> str:
         return tokenizer.convert_tokens_to_string(tokens)
 
 
+def round_float(value: float | None, decimals: int = 4) -> float | None:
+    if value is None:
+        return None
+    return round(float(value), decimals)
+
+
+def load_gpu_report(report_path: Path = GPU_INFO_PATH) -> Dict[str, Any] | None:
+    if not report_path.exists():
+        return None
+    try:
+        return json.loads(report_path.read_text())
+    except json.JSONDecodeError:
+        return {"error": f"Failed to parse {report_path}"}
+
+
+def summarize_gpu_details(report: Dict[str, Any] | None) -> Dict[str, Any] | None:
+    if report is None:
+        return None
+    if "error" in report:
+        return {"error": report["error"]}
+
+    gpu_section = report.get("gpu", {})
+    details = gpu_section.get("details") or []
+    first = details[0] if details else {}
+
+    summary = {
+        "name": first.get("name"),
+        "driver_version": first.get("driver_version") or report.get("detected_driver_version"),
+        "cuda_version": first.get("cuda_version") or report.get("detected_cuda_version"),
+        "details": details,
+    }
+    warnings = gpu_section.get("warnings") or report.get("warnings")
+    if warnings:
+        summary["warnings"] = warnings
+    return summary
+
+
 def main() -> None:
     args = parse_args()
     hf_logging.set_verbosity_error()
 
+    log_enabled = not args.no_print
+
+    def log(message: str) -> None:
+        if log_enabled:
+            print(message)
+
     if args.model_dir is not None:
         model_dir = args.model_dir.expanduser().resolve()
+        model_variant = str(model_dir)
     else:
         model_dir = get_model_root(model_variant=DEFAULT_REPO_ID)
+        model_variant = DEFAULT_REPO_ID
 
     if not model_dir.exists():
         raise FileNotFoundError(f"Model directory not found: {model_dir}")
@@ -222,8 +294,12 @@ def main() -> None:
     dtype = select_dtype(device)
     device_map = "auto" if device == "cuda" else None
 
-    print(f"[INFO] Using device={device}, dtype={dtype}")
-    print("[INFO] Loading Hugging Face OLMo model weights...")
+    if device == "cuda":
+        torch.cuda.empty_cache()
+        torch.cuda.reset_peak_memory_stats()
+
+    log(f"[INFO] Using device={device}, dtype={dtype}")
+    log("[INFO] Loading Hugging Face OLMo model weights...")
 
     tokenizer = AutoTokenizer.from_pretrained(
         tokenizer_dir,
@@ -243,19 +319,94 @@ def main() -> None:
     model.eval()
 
     inputs = tokenizer(args.prompt, return_tensors="pt").to(model.device)
+
+    if device == "cuda":
+        torch.cuda.synchronize()
+    generation_start = time.perf_counter()
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
-            do_sample=True,
+            do_sample=args.do_sample,
         )
+    if device == "cuda":
+        torch.cuda.synchronize()
+    generation_duration = time.perf_counter() - generation_start
+
+    input_length = inputs["input_ids"].shape[-1]
+    output_length = outputs.shape[-1]
+    new_tokens = max(output_length - input_length, 0)
 
     completion = safe_decode(tokenizer, outputs[0])
+    continuation = safe_decode(tokenizer, outputs[0, input_length:])
 
-    print("\n" + "=" * 80)
-    print(completion)
-    print("=" * 80)
+    if device == "cuda":
+        max_memory_bytes = torch.cuda.max_memory_allocated()
+    else:
+        max_memory_bytes = None
+    if generation_duration > 0 and new_tokens:
+        tokens_per_second = new_tokens / generation_duration
+    else:
+        tokens_per_second = None
+
+    rounded_time_seconds = round_float(generation_duration)
+    rounded_tokens_per_second = round_float(tokens_per_second)
+    rounded_temperature = round_float(args.temperature)
+    max_memory_megabytes = (
+        round_float(max_memory_bytes / (1024**2)) if max_memory_bytes is not None else None
+    )
+
+    if not args.no_print:
+        print("\n" + "=" * 80)
+        print(completion)
+        print("=" * 80)
+
+    analysis_payload: Dict[str, Any] | None = None
+    if args.analyze:
+        device_map_runtime = getattr(model, "hf_device_map", device_map)
+        if isinstance(device_map_runtime, dict):
+            device_map_serializable = {k: str(v) for k, v in device_map_runtime.items()}
+        else:
+            device_map_serializable = device_map_runtime
+        gpu_summary = summarize_gpu_details(load_gpu_report())
+        timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        analysis_payload = {
+            "timestamp": timestamp,
+            "model": {
+                "name": args.model_name,
+                "variant": model_variant,
+                "config_name": getattr(model.config, "_name_or_path", None),
+                "path": str(snapshot_dir),
+                "tokenizer_path": str(tokenizer_dir),
+            },
+            "generation": {
+                "prompt": args.prompt,
+                "completion": completion,
+                "continuation": continuation,
+                "input_length_tokens": int(input_length),
+                "output_length_tokens": int(output_length),
+                "new_tokens": int(new_tokens),
+                "max_new_tokens_requested": args.max_new_tokens,
+                "temperature": rounded_temperature,
+                "time_seconds": rounded_time_seconds,
+                "tokens_per_second": rounded_tokens_per_second,
+                "do_sample": args.do_sample,
+            },
+            "runtime": {
+                "device_preference": args.device,
+                "resolved_device": device,
+                "dtype": str(dtype),
+                "device_map": device_map_serializable,
+                "max_memory_bytes": max_memory_bytes,
+                "max_memory_megabytes": max_memory_megabytes,
+                "torch_version": torch.__version__,
+                "python_version": sys.version,
+            },
+        }
+        if gpu_summary is not None:
+            analysis_payload["runtime"]["gpu"] = gpu_summary
+        print(json.dumps(analysis_payload, indent=2))
 
     if snapshot_tmp is not None:
         snapshot_tmp.cleanup()
