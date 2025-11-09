@@ -44,6 +44,20 @@ except (FileNotFoundError, ValueError):
 DEFAULT_PROMPT = "Explain why attention mechanisms improved transformer models."
 DEFAULT_MAX_NEW_TOKENS = 128
 DEFAULT_TEMPERATURE = 0.8
+HF_VERBOSITY_CHOICES = ("error", "warning", "info", "debug")
+HF_VERBOSITY_FUNCS = {
+    "error": hf_logging.set_verbosity_error,
+    "warning": hf_logging.set_verbosity_warning,
+    "info": hf_logging.set_verbosity_info,
+    "debug": hf_logging.set_verbosity_debug,
+}
+
+
+def configure_hf_logging(level: str) -> None:
+    func = HF_VERBOSITY_FUNCS.get(level)
+    if func is None:  # pragma: no cover - gated by argparse choices
+        raise ValueError(f"Unsupported Hugging Face verbosity level: {level}")
+    func()
 
 
 def parse_args() -> argparse.Namespace:
@@ -112,6 +126,12 @@ def parse_args() -> argparse.Namespace:
         help="Disable sampling during generation.",
     )
     parser.set_defaults(do_sample=True)
+    parser.add_argument(
+        "--hf-verbosity",
+        choices=HF_VERBOSITY_CHOICES,
+        default="error",
+        help="Control Hugging Face logging verbosity (default: error).",
+    )
     return parser.parse_args()
 
 
@@ -264,7 +284,7 @@ def summarize_gpu_details(report: Dict[str, Any] | None) -> Dict[str, Any] | Non
 
 def main() -> None:
     args = parse_args()
-    hf_logging.set_verbosity_error()
+    configure_hf_logging(args.hf_verbosity)
 
     log_enabled = not args.no_print
 

@@ -36,6 +36,20 @@ DEFAULT_MULTIPLIER = 2
 
 
 DEFAULT_MODEL_NAME, _, DEFAULT_REPO_ID = get_model_identifiers()
+HF_VERBOSITY_CHOICES = ("error", "warning", "info", "debug")
+HF_VERBOSITY_FUNCS = {
+    "error": hf_logging.set_verbosity_error,
+    "warning": hf_logging.set_verbosity_warning,
+    "info": hf_logging.set_verbosity_info,
+    "debug": hf_logging.set_verbosity_debug,
+}
+
+
+def configure_hf_logging(level: str) -> None:
+    func = HF_VERBOSITY_FUNCS.get(level)
+    if func is None:  # pragma: no cover - guarded by argparse choices
+        raise ValueError(f"Unsupported Hugging Face verbosity level: {level}")
+    func()
 
 
 def parse_args() -> argparse.Namespace:
@@ -109,6 +123,12 @@ def parse_args() -> argparse.Namespace:
         help="Disable sampling for downstream runs.",
     )
     parser.set_defaults(do_sample=True)
+    parser.add_argument(
+        "--hf-verbosity",
+        choices=HF_VERBOSITY_CHOICES,
+        default="error",
+        help="Control Hugging Face logging verbosity (default: error).",
+    )
     return parser.parse_args()
 
 
@@ -242,6 +262,8 @@ def invoke_inference(
         cmd.append("--do-sample")
     else:
         cmd.append("--no-do-sample")
+    if model_args.get("hf_verbosity"):
+        cmd.extend(["--hf-verbosity", model_args["hf_verbosity"]])
 
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if result.returncode != 0:
@@ -253,7 +275,7 @@ def invoke_inference(
 
 def main() -> None:
     args = parse_args()
-    hf_logging.set_verbosity_error()
+    configure_hf_logging(args.hf_verbosity)
 
     if args.model_dir is not None:
         model_dir = args.model_dir.expanduser().resolve()
@@ -309,6 +331,7 @@ def main() -> None:
         "tokenizer_dir": tokenizer_dir,
         "device": args.device,
         "temperature": args.temperature,
+        "hf_verbosity": args.hf_verbosity,
     }
 
     output_root = args.output_root.expanduser().resolve()

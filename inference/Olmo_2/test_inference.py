@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -18,6 +19,7 @@ except ModuleNotFoundError as exc:  # pragma: no cover
 
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
+    from transformers.utils import logging as hf_logging
 except ModuleNotFoundError as exc:  # pragma: no cover
     print("❌ transformers is not installed. Run setup_env/install_deps.sh first.")
     raise SystemExit(1) from exc
@@ -36,6 +38,31 @@ REPORTS_DIR = ROOT / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 JSON_PATH = REPORTS_DIR / "test_summary.json"
 MARKDOWN_PATH = REPORTS_DIR / "test_summary.md"
+HF_VERBOSITY_CHOICES = ("error", "warning", "info", "debug")
+HF_VERBOSITY_FUNCS = {
+    "error": hf_logging.set_verbosity_error,
+    "warning": hf_logging.set_verbosity_warning,
+    "info": hf_logging.set_verbosity_info,
+    "debug": hf_logging.set_verbosity_debug,
+}
+
+
+def configure_hf_logging(level: str) -> None:
+    func = HF_VERBOSITY_FUNCS.get(level)
+    if func is None:  # pragma: no cover - argparse enforces choices
+        raise ValueError(f"Unsupported Hugging Face verbosity level: {level}")
+    func()
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Minimal inference sanity check for local OLMo snapshots.")
+    parser.add_argument(
+        "--hf-verbosity",
+        choices=HF_VERBOSITY_CHOICES,
+        default="error",
+        help="Control Hugging Face logging verbosity (default: error).",
+    )
+    return parser.parse_args()
 
 
 def pick_device(preference: str) -> str:
@@ -89,6 +116,8 @@ def select_dtype(device: str) -> torch.dtype:
     return torch.float32
 
 def main() -> int:
+    args = parse_args()
+    configure_hf_logging(args.hf_verbosity)
     try:
         default_model, _, default_repo = get_model_identifiers()
     except (FileNotFoundError, ValueError):
