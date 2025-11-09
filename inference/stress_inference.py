@@ -345,7 +345,7 @@ def main() -> None:
         / stamp
     ).resolve()
     target_dir.mkdir(parents=True, exist_ok=True)
-    results_path = target_dir / "results.jsonl"
+    results_path = target_dir / "results.json"
     metadata = {
         "model_name": args.model_name,
         "model_variant": variant_label,
