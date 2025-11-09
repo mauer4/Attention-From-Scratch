@@ -38,23 +38,25 @@ JSON_PATH = REPORTS_DIR / "test_summary.json"
 MARKDOWN_PATH = REPORTS_DIR / "test_summary.md"
 
 
-def pick_device(preference: str) -> torch.device:
-    normalized = preference.lower()
-    if normalized == "cpu":
-        return torch.device("cpu")
-    if normalized == "cuda" and torch.cuda.is_available():
-        return torch.device("cuda")
-    if normalized == "cuda":
-        return torch.device("cpu")
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def pick_device(preference: str) -> str:
+    if preference == "cpu":
+        return "cpu"
+    if preference == "cuda":
+        if torch.cuda.is_available():
+            return "cuda"
+        print("Requested CUDA but none detected; falling back to CPU.")
+        return "cpu"
+    return "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def run_inference(weights: Path, tokenizer_dir: Path, device: torch.device) -> Dict[str, Any]:
+def run_inference(weights: Path, tokenizer_dir: Path, device: str, dtype: torch.dtype) -> Dict[str, Any]:
+    print(f"[INFO] Using device={device}, dtype={dtype}")
+    print("[INFO] Loading Hugging Face OLMo model weights...")
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_dir, local_files_only=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(weights, local_files_only=True)
+    model = AutoModelForCausalLM.from_pretrained(weights, local_files_only=True, dtype=dtype)
     model.to(device)
     model.eval()
 
@@ -75,10 +77,16 @@ def run_inference(weights: Path, tokenizer_dir: Path, device: torch.device) -> D
         "tokens": output.shape[-1],
     }
 
-    if device.type == "cuda":
+    if device == "cuda":
         metrics["max_memory_mb"] = round(torch.cuda.max_memory_allocated(device) / (1024 * 1024), 2)
     return metrics
 
+def select_dtype(device: str) -> torch.dtype:
+    if device == "cuda":
+        if torch.cuda.is_bf16_supported():
+            return torch.bfloat16
+        return torch.float16
+    return torch.float32
 
 def main() -> int:
     try:
@@ -140,13 +148,14 @@ def main() -> int:
         else:
             try:
                 device = pick_device(preferred_device)
-                if device.type == "cuda" and not torch.cuda.is_available():
+                dtype = select_dtype(device)
+                if device == "cuda" and not torch.cuda.is_available():
                     warnings.append("CUDA requested but not available; falling back to CPU")
                     device = torch.device("cpu")
-                if device.type == "cuda":
+                if device == "cuda":
                     torch.cuda.reset_peak_memory_stats(device)
-                results = run_inference(weights_path, tokenizer_path, device)
-                if device.type == "cpu":
+                results = run_inference(weights_path, tokenizer_path, device, dtype)
+                if device == "cpu":
                     warnings.append("Inference executed on CPU; enable CUDA for full validation")
             except Exception as exc:  # noqa: BLE001
                 status = "failed"
