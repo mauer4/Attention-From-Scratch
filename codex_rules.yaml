@@ -20,6 +20,10 @@ checks:
       - setup_env
       - scripts
       - src
+      - include
+      - src/custom_engine
+      - src/custom_engine/utils
+      - src/custom_engine/v1
       - weights
       - configs
       - reports
@@ -40,4 +44,18 @@ outputs:
   - reports/auto_verification.json
   - reports/auto_verification.md
   - reports/auto_verification.html
+guidelines:
+  custom_engine_v1_basic:
+    description: >-
+      The non-performant, correctness-first custom engine (v1) lives in src/custom_engine/v1
+      and depends on shared utilities in src/custom_engine/util plus headers under include/.
+      Logging and error-handling must route through custom_engine/utils/logging.h, CUDA work
+      should use custom_engine/utils/cuda_utils.cuh, and safetensors access must go through
+      custom_engine/utils/safetensors.*.
+    requirements:
+      - Maintain the logging/error macros so diagnostics stay uniform across host and CUDA code.
+      - Keep tokenizer bridges and other adapters in src/custom_engine/v1 to separate engine
+        specifics from reusable utilities.
+      - Tests for shard loading (tests/test_loader.cpp) must stay in sync with codex rules to
+        validate weight/index integrity.
 personality: diagnostic

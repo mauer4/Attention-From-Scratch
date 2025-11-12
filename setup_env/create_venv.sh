@@ -67,9 +67,6 @@ else
     python3 -m venv "${VENV_DIR}" || {
       echo "⚠️  python3 -m venv failed; attempting fallback." >&2
     }
-    # Ensure our env hook is installed
-    mkdir -p .venv/activate.d
-    cp ${ROOT_DIR}/setup_env/project_env.sh ${VENV_DIR}/activate.d/10_project_env.sh
   else
     echo "❌ python3 command not found." >&2
   fi

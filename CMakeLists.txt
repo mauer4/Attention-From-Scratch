@@ -6,6 +6,8 @@ project(AttentionFromScratch
     LANGUAGES CXX CUDA
 )
 
+find_package(CUDAToolkit REQUIRED)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -24,9 +26,13 @@ file(GLOB_RECURSE ATTN_CORE_SOURCES CONFIGURE_DEPENDS
 add_library(attention_core STATIC ${ATTN_CORE_SOURCES})
 target_include_directories(attention_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    # Expose src/ so custom_engine utility headers can be included directly.
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CUDAToolkit_INCLUDE_DIRS}
 )
 target_compile_definitions(attention_core
     PRIVATE $<$<CONFIG:Debug>:ATTN_ENABLE_ASSERTS>
+    PUBLIC PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
 )
 
 if(ATTN_BUILD_PYTHON)
