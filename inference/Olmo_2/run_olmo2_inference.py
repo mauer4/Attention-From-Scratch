@@ -113,6 +113,13 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Emit a JSON report capturing model metadata and performance metrics.",
     )
+    # Backwards/alternate spelling accepted by callers
+    parser.add_argument(
+        "--analysis",
+        action="store_true",
+        dest="analyze",
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument(
         "--do-sample",
         dest="do_sample",
@@ -374,7 +381,10 @@ def main() -> None:
     rounded_tokens_per_second = round_float(tokens_per_second)
     rounded_temperature = round_float(args.temperature)
     max_memory_megabytes = (
-        round_float(max_memory_bytes / (1024**2)) if max_memory_bytes is not None else None
+        int(max_memory_bytes / (1024**2)) if max_memory_bytes is not None else None
+    )
+    max_memory_gigabytes = (
+        round_float(max_memory_bytes / (1024**3), 2) if max_memory_bytes is not None else None
     )
 
     if not args.no_print:
@@ -420,13 +430,28 @@ def main() -> None:
                 "device_map": device_map_serializable,
                 "max_memory_bytes": max_memory_bytes,
                 "max_memory_megabytes": max_memory_megabytes,
+                "max_memory_gigabytes": max_memory_gigabytes,
                 "torch_version": torch.__version__,
                 "python_version": sys.version,
             },
         }
         if gpu_summary is not None:
             analysis_payload["runtime"]["gpu"] = gpu_summary
-        print(json.dumps(analysis_payload, indent=2))
+        # Always write a timestamped JSON report to reports/vanilla_inference_<datetime>_rpt.json
+        reports_dir = REPO_ROOT / "reports"
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M")
+        report_path = reports_dir / f"vanilla_inference_{timestamp}_rpt.json"
+        try:
+            report_path.write_text(json.dumps(analysis_payload, indent=2))
+            if log_enabled:
+                print(f"Analysis JSON written to: {report_path}")
+        except OSError as exc:
+            print(f"Failed to write analysis report to {report_path}: {exc}")
+
+        # Also emit to stdout unless suppressed explicitly.
+        if not args.no_print:
+            print(json.dumps(analysis_payload, indent=2))
 
     if snapshot_tmp is not None:
         snapshot_tmp.cleanup()
