@@ -62,8 +62,17 @@ main() {
   fi
   TMP_REQ="$(mktemp "${REPO_DIR}/inference/requirements.XXXXXX.txt")"
   # Normalize any ssh-based Git URLs to https to avoid auth prompts
-  sed -E 's|git\\+ssh://[^@]+@github.com/|git+https://github.com/|; /^(compression|efficiency)\//d' \
-    "${REPO_DIR}/inference/requirements.txt" > "${TMP_REQ}"
+  SRC_REQ="${REPO_DIR}/inference/requirements.txt"
+  SRC_REQ="${SRC_REQ}" DST_REQ="${TMP_REQ}" python - <<'PY'
+import os, re, pathlib
+
+src = pathlib.Path(os.environ["SRC_REQ"])
+dst = pathlib.Path(os.environ["DST_REQ"])
+text = src.read_text()
+text = re.sub(r"git\+ssh://[^\s]*github.com/", "git+https://github.com/", text)
+lines = [line for line in text.splitlines() if not line.startswith(("compression/", "efficiency/"))]
+dst.write_text("\n".join(lines) + "\n")
+PY
   if ! python -m pip install --no-deps -r "${TMP_REQ}"; then
     rm -f "${TMP_REQ}"
     die "❌ Failed to install inference requirements." || return 1
