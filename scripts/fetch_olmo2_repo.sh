@@ -61,7 +61,8 @@ main() {
     die "❌ Failed to install OLMo in editable mode." || return 1
   fi
   TMP_REQ="$(mktemp "${REPO_DIR}/inference/requirements.XXXXXX.txt")"
-  sed -E 's|git+ssh://git@github.com/|git+https://github.com/|; /^(compression|efficiency)\//d' \
+  # Normalize any ssh-based Git URLs to https to avoid auth prompts
+  sed -E 's|git\\+ssh://[^@]+@github.com/|git+https://github.com/|; /^(compression|efficiency)\//d' \
     "${REPO_DIR}/inference/requirements.txt" > "${TMP_REQ}"
   if ! python -m pip install --no-deps -r "${TMP_REQ}"; then
     rm -f "${TMP_REQ}"
