@@ -71,6 +71,32 @@ main() {
     overall_status=1
   fi
 
+  # Print repository fetch/update summary (if available).
+  FETCH_INFO="${ROOT_DIR}/llm_repos/Olmo/.fetch_info.json"
+  if [[ -f "${FETCH_INFO}" ]]; then
+    echo "→ OLMo repo fetch summary:" 
+    python - <<PY
+import json,sys
+try:
+    info=json.load(open('${FETCH_INFO}'))
+except Exception as e:
+    print('  (failed to read fetch info:',e,')')
+    sys.exit(0)
+action=info.get('action')
+local=info.get('local_commit','')
+remote=info.get('remote_commit','')
+tag=info.get('tag','')
+url=info.get('remote_url','')
+print(f"  action: {action}")
+if tag:
+    print(f"  tag: {tag}")
+print(f"  local: {local}")
+if remote:
+    print(f"  remote: {remote}")
+print(f"  remote_url: {url}")
+PY
+  fi
+
   step "⚙️  Step 4: Install Python dependencies"
   if ! bash "${ROOT_DIR}/setup_env/install_deps.sh"; then
     echo "⚠️  Dependency installation encountered issues." >&2

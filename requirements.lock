@@ -1,5 +1,5 @@
 -e git+https://github.com/allenai/OLMo.git@090253dac6688f2532509daa7aa2eb5fae50e956#egg=ai2_olmo
--e git+https://github.com/mauer4/Attention-From-Scratch.git@0b3425a882cc43b1de2d8c7202431eca0c10b0a9#egg=attention_from_scratch
+-e git+https://github.com/mauer4/Attention-From-Scratch.git@85050b9e203ce3b736e3e505aaac4721ea7e5d23#egg=attention_from_scratch
 Jinja2==3.1.6
 Markdown==3.6
 MarkupSafe==3.0.3

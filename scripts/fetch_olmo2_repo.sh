@@ -14,6 +14,7 @@ fi
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_DIR="${ROOT_DIR}/llm_repos/Olmo"
 ENV_DIR="${1:-${ROOT_DIR}/.venv}"
+FETCH_INFO="${REPO_DIR}/.fetch_info.json"
 
 log() {
   echo "[fetch-olmo] $*"
@@ -43,13 +44,16 @@ main() {
     if ! git clone --depth 1 https://github.com/allenai/OLMo.git "${REPO_DIR}"; then
       die "❌ Failed to clone repository." || return 1
     fi
+    ACTION="cloned"
   elif [[ "${UPDATE_REPO}" == "1" ]]; then
     log "Updating existing repository at ${REPO_DIR} (FETCH_OLMO_UPDATE=1)."
     if ! git -C "${REPO_DIR}" pull --ff-only; then
       die "❌ git pull failed." || return 1
     fi
+    ACTION="updated"
   else
     log "Repository already present at ${REPO_DIR}; skipping git pull."
+    ACTION="present"
   fi
 
   if ! ensure_repo; then
@@ -100,6 +104,47 @@ Activate it with: source ${ENV_DIR}/bin/activate
 Repo CLI usage: see ${REPO_DIR}/README.md
 
 EOF
+
+  # Record fetch/update status and repository version information so callers can
+  # make informed decisions (install_all.sh will consume this file).
+  if command -v git >/dev/null 2>&1; then
+    LOCAL_COMMIT="$(git -C "${REPO_DIR}" rev-parse --verify HEAD 2>/dev/null || true)"
+    # Try to query the origin for the most recent HEAD commit.
+    REMOTE_COMMIT="$(git -C "${REPO_DIR}" ls-remote origin HEAD 2>/dev/null | awk '{print $1}' || true)"
+    if [[ -z "${REMOTE_COMMIT}" ]]; then
+      REMOTE_COMMIT="$(git ls-remote https://github.com/allenai/OLMo.git HEAD 2>/dev/null | awk '{print $1}' || true)"
+    fi
+    TAG="$(git -C "${REPO_DIR}" describe --tags --exact-match HEAD 2>/dev/null || true)"
+    REMOTE_URL="$(git -C "${REPO_DIR}" remote get-url origin 2>/dev/null || echo 'https://github.com/allenai/OLMo.git')"
+
+    # If we only found the repo present and didn't explicitly update, mark as
+    # up-to-date when local == remote to avoid unnecessary pulls.
+    if [[ "${ACTION}" == "present" ]]; then
+      if [[ -n "${LOCAL_COMMIT}" && -n "${REMOTE_COMMIT}" && "${LOCAL_COMMIT}" == "${REMOTE_COMMIT}" ]]; then
+        ACTION="up-to-date"
+      else
+        ACTION="outdated"
+      fi
+    fi
+
+    # Write a small JSON summary so callers (and CI) can inspect status.
+    if [[ -n "${FETCH_INFO}" ]]; then
+      python - <<PY > "${FETCH_INFO}.tmp"
+import json, time, os
+info = {
+    'action': os.environ.get('ACTION', ''),
+    'local_commit': os.environ.get('LOCAL_COMMIT', ''),
+    'remote_commit': os.environ.get('REMOTE_COMMIT', ''),
+    'tag': os.environ.get('TAG', ''),
+    'remote_url': os.environ.get('REMOTE_URL', ''),
+    'timestamp': time.time(),
+}
+print(json.dumps(info, indent=2))
+PY
+      # Atomically move into place.
+      mv "${FETCH_INFO}.tmp" "${FETCH_INFO}" 2>/dev/null || true
+    fi
+  fi
 }
 
 main "$@"
