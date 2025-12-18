@@ -87,7 +87,7 @@ main() {
   fi
 
   step "⚙️  Step 6: Run sanity inference"
-  if python "${ROOT_DIR}/scripts/test_inference.py"; then
+  if python "${ROOT_DIR}/inference/Olmo_2/test_inference.py"; then
     echo "✅ Sanity inference executed"
   else
     echo "⚠️  Sanity inference recorded issues (see reports/test_summary.json)"
