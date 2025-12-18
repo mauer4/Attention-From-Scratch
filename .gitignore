@@ -22,6 +22,7 @@ third_party/
 llm_original/
 llm_raw/olmo_2/metadata/.cache/
 llm_raw/olmo_2/hf_snapshot/
+llm_raw/olmo_2/raw_tokenizer/*
 inference/Olmo_2/logs/
 inference/From_Scratch/logs/
 model-*-of-*.safetensors

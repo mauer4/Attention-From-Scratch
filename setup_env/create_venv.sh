@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091
-set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VENV_DIR="${ROOT_DIR}/.venv"
-
+# If this script is sourced, avoid changing the caller's shell options
 IS_SOURCED=0
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
   IS_SOURCED=1
 fi
+
+# Only set strict options when executed directly (not when sourced)
+if [[ "${IS_SOURCED}" -eq 0 ]]; then
+  set -euo pipefail
+fi
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VENV_DIR="${ROOT_DIR}/.venv"
 
 detect_platform() {
   local uname_out
@@ -34,19 +39,28 @@ log() {
   printf "[create_venv] %s\n" "$*"
 }
 
+# Helper to fail safely: return when sourced, exit when executed
+die() {
+  local msg="$1"
+  echo "${msg}" >&2
+  if [[ "${IS_SOURCED}" -eq 1 ]]; then
+    return 1
+  else
+    exit 1
+  fi
+}
+
 CONFIG_EXPORTER="${ROOT_DIR}/setup_env/export_model_env.py"
 PYTHON_BIN="python"
 if ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
   if command -v python3 >/dev/null 2>&1; then
     PYTHON_BIN="python3"
   else
-    echo "❌ python or python3 command is required." >&2
-    exit 1
+    die "❌ python or python3 command is required."
   fi
 fi
 if ! ENV_SETTINGS="$("${PYTHON_BIN}" "${CONFIG_EXPORTER}")"; then
-  echo "❌ Failed to load model configuration from config/config.yaml" >&2
-  exit 1
+  die "❌ Failed to load model configuration from config/config.yaml"
 fi
 eval "${ENV_SETTINGS}"
 log "Project root: ${PROJECT_ROOT}"
@@ -68,7 +82,7 @@ else
       echo "⚠️  python3 -m venv failed; attempting fallback." >&2
     }
   else
-    echo "❌ python3 command not found." >&2
+    die "❌ python3 command not found."
   fi
 
   if [[ ! -d "${VENV_DIR}" ]]; then
@@ -76,18 +90,20 @@ else
       echo "⚠️  Falling back to conda environment 'infer'."
       conda create -y -n infer python=3.12
       echo "✅ Activate with: conda activate infer"
-      exit 0
+      if [[ "${IS_SOURCED}" -eq 1 ]]; then
+        return 0
+      else
+        exit 0
+      fi
     else
-      echo "❌ Unable to create virtual environment. Install Python 3.12+ or conda." >&2
-      exit 1
+      die "❌ Unable to create virtual environment. Install Python 3.12+ or conda."
     fi
   fi
 fi
 
 ACTIVATE_SCRIPT="${VENV_DIR}/bin/activate"
 if [[ ! -f "${ACTIVATE_SCRIPT}" ]]; then
-  echo "❌ Activation script missing at ${ACTIVATE_SCRIPT}" >&2
-  exit 1
+  die "❌ Activation script missing at ${ACTIVATE_SCRIPT}"
 fi
 
 log "Activating ${VENV_DIR}"
