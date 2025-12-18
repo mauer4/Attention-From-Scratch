@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
-set -euo pipefail
+
+# Detect whether sourced to avoid exiting the caller's shell
+IS_SOURCED=0
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+  IS_SOURCED=1
+fi
+
+# Only set pipefail when executed directly (avoid altering caller options)
+if [[ "${IS_SOURCED}" -eq 0 ]]; then
+  set -o pipefail
+fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_DIR="${ROOT_DIR}/llm_repos/Olmo"
@@ -9,40 +19,57 @@ log() {
   echo "[fetch-olmo] $*"
 }
 
-UPDATE_REPO=${FETCH_OLMO_UPDATE:-0}
+die() {
+  echo "[fetch-olmo] $*" >&2
+  return 1
+}
 
-mkdir -p "$(dirname "${REPO_DIR}")"
+main() {
+  UPDATE_REPO=${FETCH_OLMO_UPDATE:-0}
 
-if [[ ! -d "${REPO_DIR}/.git" ]]; then
-  log "Cloning allenai/OLMo into ${REPO_DIR}."
-  git clone --depth 1 https://github.com/allenai/OLMo.git "${REPO_DIR}"
-elif [[ "${UPDATE_REPO}" == "1" ]]; then
-  log "Updating existing repository at ${REPO_DIR} (FETCH_OLMO_UPDATE=1)."
-  git -C "${REPO_DIR}" pull --ff-only
-else
-  log "Repository already present at ${REPO_DIR}; skipping git pull."
-fi
+  mkdir -p "$(dirname "${REPO_DIR}")"
 
-if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-  # shellcheck disable=SC1091
-  if [[ ! -f "${ENV_DIR}/bin/activate" ]]; then
-    log "Python environment missing at ${ENV_DIR}; run setup_env/create_venv.sh first."
-    exit 1
+  if [[ ! -d "${REPO_DIR}/.git" ]]; then
+    log "Cloning allenai/OLMo into ${REPO_DIR}."
+    if ! git clone --depth 1 https://github.com/allenai/OLMo.git "${REPO_DIR}"; then
+      die "❌ Failed to clone repository." || return 1
+    fi
+  elif [[ "${UPDATE_REPO}" == "1" ]]; then
+    log "Updating existing repository at ${REPO_DIR} (FETCH_OLMO_UPDATE=1)."
+    if ! git -C "${REPO_DIR}" pull --ff-only; then
+      die "❌ git pull failed." || return 1
+    fi
+  else
+    log "Repository already present at ${REPO_DIR}; skipping git pull."
   fi
-  log "Activating Python environment at ${ENV_DIR}"
-  source "${ENV_DIR}/bin/activate"
-else
-  log "Using active Python environment at ${VIRTUAL_ENV}"
-fi
 
-python -m pip install --no-deps -e "${REPO_DIR}"
-TMP_REQ="$(mktemp "${REPO_DIR}/inference/requirements.XXXXXX.txt")"
-sed -E 's|git+ssh://git@github.com/|git+https://github.com/|; /^(compression|efficiency)\//d' \
-  "${REPO_DIR}/inference/requirements.txt" > "${TMP_REQ}"
-python -m pip install --no-deps -r "${TMP_REQ}"
-rm -f "${TMP_REQ}"
+  if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+    # shellcheck disable=SC1091
+    if [[ ! -f "${ENV_DIR}/bin/activate" ]]; then
+      die "Python environment missing at ${ENV_DIR}; run setup_env/create_venv.sh first." || return 1
+    fi
+    log "Activating Python environment at ${ENV_DIR}"
+    # shellcheck disable=SC1090
+    if ! source "${ENV_DIR}/bin/activate"; then
+      die "❌ Failed to activate environment at ${ENV_DIR}" || return 1
+    fi
+  else
+    log "Using active Python environment at ${VIRTUAL_ENV}"
+  fi
 
-cat <<EOF
+  if ! python -m pip install --no-deps -e "${REPO_DIR}"; then
+    die "❌ Failed to install OLMo in editable mode." || return 1
+  fi
+  TMP_REQ="$(mktemp "${REPO_DIR}/inference/requirements.XXXXXX.txt")"
+  sed -E 's|git+ssh://git@github.com/|git+https://github.com/|; /^(compression|efficiency)\//d' \
+    "${REPO_DIR}/inference/requirements.txt" > "${TMP_REQ}"
+  if ! python -m pip install --no-deps -r "${TMP_REQ}"; then
+    rm -f "${TMP_REQ}"
+    die "❌ Failed to install inference requirements." || return 1
+  fi
+  rm -f "${TMP_REQ}"
+
+  cat <<EOF
 
 OLMo repository cloned to: ${REPO_DIR}
 Virtual environment available at: ${ENV_DIR}
@@ -50,3 +77,11 @@ Activate it with: source ${ENV_DIR}/bin/activate
 Repo CLI usage: see ${REPO_DIR}/README.md
 
 EOF
+}
+
+main "$@"
+status=$?
+if [[ "${IS_SOURCED}" -eq 1 ]]; then
+  return "${status}"
+fi
+exit "${status}"
