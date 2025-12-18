@@ -29,6 +29,15 @@ main() {
 
   mkdir -p "$(dirname "${REPO_DIR}")"
 
+  ensure_repo() {
+    if [[ -f "${REPO_DIR}/pyproject.toml" || -f "${REPO_DIR}/setup.py" ]]; then
+      return 0
+    fi
+    log "Repository at ${REPO_DIR} looks incomplete; re-cloning."
+    rm -rf "${REPO_DIR}"
+    git clone --depth 1 https://github.com/allenai/OLMo.git "${REPO_DIR}"
+  }
+
   if [[ ! -d "${REPO_DIR}/.git" ]]; then
     log "Cloning allenai/OLMo into ${REPO_DIR}."
     if ! git clone --depth 1 https://github.com/allenai/OLMo.git "${REPO_DIR}"; then
@@ -41,6 +50,10 @@ main() {
     fi
   else
     log "Repository already present at ${REPO_DIR}; skipping git pull."
+  fi
+
+  if ! ensure_repo; then
+    die "❌ Repository re-clone failed; cannot proceed." || return 1
   fi
 
   if [[ -z "${VIRTUAL_ENV:-}" ]]; then
